@@ -123,30 +123,30 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ metrics }) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4">
       {cards.map((card) => {
         const IconComponent = card.icon;
         return (
           <div
             key={card.id}
-            className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-subtle hover:shadow-card hover:border-slate-300 transition-all duration-200 flex flex-col justify-between group"
+            className="bg-white border border-slate-200/90 rounded-xl p-3 sm:p-4 shadow-subtle hover:shadow-card hover:border-slate-300 transition-all duration-200 flex flex-col justify-between group min-w-0"
           >
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider truncate">
+            <div className="flex items-center justify-between gap-1.5 mb-2">
+              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider truncate">
                 {card.label}
               </span>
-              <div className={`p-1.5 rounded-lg ${card.iconBg} ${card.iconColor} shrink-0`}>
-                <IconComponent className="w-4 h-4" />
+              <div className={`p-1 sm:p-1.5 rounded-lg ${card.iconBg} ${card.iconColor} shrink-0`}>
+                <IconComponent className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
 
-            <div className="my-1">
-              <span className="text-2xl sm:text-3xl font-extrabold text-navy-950 tracking-tight font-sans">
+            <div className="my-0.5 sm:my-1">
+              <span className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-navy-950 tracking-tight font-sans">
                 {card.value}
               </span>
             </div>
 
-            <p className="text-[11px] text-slate-500 mt-1 truncate" title={card.subtitle}>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1 truncate" title={card.subtitle}>
               {card.subtitle}
             </p>
           </div>

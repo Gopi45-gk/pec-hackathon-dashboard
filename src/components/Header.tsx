@@ -48,19 +48,19 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-[0_1px_3px_0_rgba(15,23,42,0.03)]">
       
       {/* Top institutional strip */}
-      <div className="bg-navy-950 text-white text-[11px] py-1 px-4 sm:px-8 border-b border-navy-900">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2 tracking-wide font-medium text-slate-300">
-            <span>PRATHYUSHA ENGINEERING COLLEGE</span>
+      <div className="bg-navy-950 text-white text-[10px] sm:text-[11px] py-1 px-3 sm:px-8 border-b border-navy-900">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 tracking-wide font-medium text-slate-300 truncate">
+            <span className="truncate">PRATHYUSHA ENGINEERING COLLEGE</span>
             <span className="text-slate-600 hidden sm:inline">•</span>
             <span className="text-slate-400 text-[10px] hidden sm:inline uppercase tracking-widest font-semibold">
               Autonomous Institution
             </span>
           </div>
-          <div className="flex items-center gap-3 text-slate-400 text-[10px]">
+          <div className="flex items-center gap-3 text-slate-400 text-[10px] shrink-0">
             <span className="hidden sm:inline">Affiliated to Anna University</span>
             <span className="text-slate-600 hidden sm:inline">•</span>
-            <span className="text-blue-300 font-mono">Academic Year 2026–2027</span>
+            <span className="text-blue-300 font-mono">2026–2027</span>
           </div>
         </div>
       </div>
