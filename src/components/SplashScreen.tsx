@@ -75,7 +75,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
             PRATHYUSHA ENGINEERING COLLEGE
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-medium tracking-normal mt-1">
-            Hackathon Participation &amp; Innovation Dashboard 2026
+            Hackathon Participation Dashboard 2026
           </p>
         </div>
 

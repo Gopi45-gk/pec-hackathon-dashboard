@@ -462,6 +462,31 @@ export function calculateDashboardMetrics(
   const uniqueHackathonsWithWins = new Set(teamAwards.map(t => t.hackathonName.toLowerCase().trim()));
   const hackathonsWithWinningTeams = uniqueHackathonsWithWins.size;
 
+  // Extract reliable departments from winner and student records
+  const deptSet = new Set<string>();
+  studentWinners.forEach(s => {
+    if (s.department && s.department !== 'General' && s.department !== 'N/A' && s.department !== 'ENGG') {
+      deptSet.add(s.department.toUpperCase());
+    }
+  });
+  teamAwards.forEach(t => {
+    t.members.forEach(m => {
+      if (m.department && m.department !== 'General' && m.department !== 'N/A' && m.department !== 'ENGG') {
+        deptSet.add(m.department.toUpperCase());
+      }
+    });
+  });
+
+  const departmentList = Array.from(deptSet).sort();
+  const departmentsCount = departmentList.length;
+
+  // Hackathons registered and genuinely yet to be participated in
+  const yetToParticipateHackathons = participation.filter(p => {
+    const fUp = (p.followUpCompleted || '').toLowerCase();
+    const sWon = (p.statusWon || '').toLowerCase();
+    return p.derivedStatus === 'Registered' || fUp.includes('yet to') || sWon.includes('yet to');
+  }).length;
+
   return {
     totalHackathons,
     totalExpectedTeams,
@@ -480,7 +505,10 @@ export function calculateDashboardMetrics(
     totalPrizeMoney,
     uniqueWinningStudents,
     hackathonsWithWinningTeams,
-    uniqueWinningTeams: teamAwards.length
+    uniqueWinningTeams: teamAwards.length,
+    departmentsCount,
+    departmentList,
+    yetToParticipateHackathons
   };
 }
 

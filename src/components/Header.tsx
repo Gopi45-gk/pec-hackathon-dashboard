@@ -87,7 +87,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-normal mt-0.5">
-                Participation, Progress &amp; Achievements | 2026
+                Hackathon Participation Dashboard 2026
               </p>
             </div>
           </div>

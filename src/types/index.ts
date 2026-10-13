@@ -118,6 +118,11 @@ export interface DashboardMetrics {
   uniqueWinningStudents: number;
   hackathonsWithWinningTeams: number;
   uniqueWinningTeams: number;
+
+  // Essential Dashboard Fields
+  departmentsCount: number;
+  departmentList: string[];
+  yetToParticipateHackathons: number;
 }
 
 export interface GlobalFilterState {
