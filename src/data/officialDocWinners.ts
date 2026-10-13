@@ -13,6 +13,7 @@ export interface OfficialDocTeamAward {
   id: string; // Stable unique award identifier
   sNo: string;
   hackathonName: string;
+  chartLabel: string; // Explicit label for charts and visualizations
   eventDate: string;
   awardPosition: 'First Prize' | 'Second Prize';
   prizeMoney: number;
@@ -25,6 +26,7 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     id: 'award-1-sih-track-decode-2026',
     sNo: '1',
     hackathonName: 'BHARAT SHAKTHI TRACK DECODE SIH 2026',
+    chartLabel: 'Bharat Shakthi Track – Decode SIH 2026',
     eventDate: '01 AUG 2026',
     awardPosition: 'First Prize',
     prizeMoney: 30000,
@@ -41,6 +43,7 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     id: 'award-2-technova-2026',
     sNo: '2',
     hackathonName: 'TECHNOVA 2026',
+    chartLabel: 'Technova 2026',
     eventDate: '13 SEP 2026',
     awardPosition: 'First Prize',
     prizeMoney: 25000,
@@ -57,6 +60,7 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     id: 'award-3-sustainverse-2026',
     sNo: '3',
     hackathonName: 'SUSTAINVERSE 2026',
+    chartLabel: 'Sustainverse 2026',
     eventDate: '15-16 SEP 2026',
     awardPosition: 'Second Prize',
     prizeMoney: 5000,
@@ -72,6 +76,7 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     id: 'award-4-vynorae-2026',
     sNo: '4',
     hackathonName: 'VYNORAE 2026',
+    chartLabel: 'Vynorae 2026',
     eventDate: '21-22 AUG 2026',
     awardPosition: 'First Prize',
     prizeMoney: 20000,
@@ -86,6 +91,7 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     id: 'award-5-tech-thiruvizha-2026',
     sNo: '5',
     hackathonName: 'TECH THIRUVIZHA 2026',
+    chartLabel: 'Tech Thiruvizha 2026',
     eventDate: '25 AUG 2026',
     awardPosition: 'Second Prize',
     prizeMoney: 5000,
@@ -100,6 +106,7 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     id: 'award-6-hack-day-genesis-first-2026',
     sNo: '6',
     hackathonName: 'HACK DAY GENESIS 2026',
+    chartLabel: 'Hack Day Genesis 2026 — First Prize',
     eventDate: '30 SEP 2026',
     awardPosition: 'First Prize',
     prizeMoney: 2000,
@@ -114,6 +121,7 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     id: 'award-7-hack-day-genesis-second-2026',
     sNo: '7',
     hackathonName: 'HACK DAY GENESIS 2026',
+    chartLabel: 'Hack Day Genesis 2026 — Second Prize',
     eventDate: '30 SEP 2026',
     awardPosition: 'Second Prize',
     prizeMoney: 1000,
@@ -129,6 +137,7 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     id: 'award-8-future-forge-2026',
     sNo: '8',
     hackathonName: 'FUTURE FORGE 2K26',
+    chartLabel: 'Future Forge 2K26',
     eventDate: '05-06 OCT 2026',
     awardPosition: 'Second Prize',
     prizeMoney: 8000,

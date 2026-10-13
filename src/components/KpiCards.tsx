@@ -9,6 +9,11 @@ import {
 } from 'lucide-react';
 import { DashboardMetrics } from '../types';
 
+import { 
+  TOTAL_OFFICIAL_DOC_TEAMS, 
+  TOTAL_OFFICIAL_DOC_PRIZE 
+} from '../data/officialDocWinners';
+
 interface KpiCardsProps {
   metrics: DashboardMetrics;
 }
@@ -52,7 +57,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ metrics }) => {
   const animatedTeams = useCountUp(metrics.totalRegisteredTeams);
   const animatedStudents = useCountUp(metrics.totalParticipatingStudents);
   const animatedDepts = useCountUp(metrics.departmentsCount);
-  const animatedWinners = useCountUp(metrics.uniqueWinningTeams);
+  const animatedWinners = useCountUp(TOTAL_OFFICIAL_DOC_TEAMS);
   const animatedUpcoming = useCountUp(metrics.yetToParticipateHackathons);
 
   const formatNumber = (num: number) => Math.round(num).toLocaleString('en-IN');
@@ -104,9 +109,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ metrics }) => {
       id: 'winning-teams',
       label: 'Winning Teams',
       value: formatNumber(animatedWinners),
-      subtitle: metrics.totalPrizeMoney > 0
-        ? `₹${metrics.totalPrizeMoney.toLocaleString('en-IN')} cash awarded`
-        : 'Teams with confirmed prizes',
+      subtitle: `₹${TOTAL_OFFICIAL_DOC_PRIZE.toLocaleString('en-IN')} cash awarded`,
       icon: Trophy,
       iconColor: 'text-amber-600',
       iconBg: 'bg-amber-50',
