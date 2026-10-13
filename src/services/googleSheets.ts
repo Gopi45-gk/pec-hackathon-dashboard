@@ -10,11 +10,31 @@ import {
 } from '../types';
 import { DEFAULT_PARTICIPATION_RAW, DEFAULT_WINNERS_RAW } from '../data/defaultPecData';
 
-// Helper to clean currency strings like "₹30,000/-" or "5000" into pure numbers
+// Known GIDs for published workbook: "Domain Wise Hackathon Details"
+export const PUBLISHED_SHEET_GIDS: Record<string, string> = {
+  'overall report': '1851704276',
+  'participation': '1851704276',
+  'consolidated': '1003242282',
+  'agriculture': '766550584',
+  'disaster management': '2002458420',
+  'drones & defence': '1861253965',
+  'e-governance': '2126184546',
+  'education': '291873458',
+  'fintech': '1727482644',
+  'healthcare vijayashanthi': '490712135',
+  'healthcare vaidhya': '293920305',
+  'industry 4.0 & 5.0': '547683925',
+  'mobility & transportation': '2093294367',
+  'renewable energy': '1917244074',
+  'robotics & automation': '1805164554',
+  'smart and urban tech': '1523528622'
+};
+
+// Helper to clean currency strings like "₹30,000/-", "15000", or "Rs 25, 000" into pure numbers
 export function parseCurrency(val: any): number {
   if (typeof val === 'number') return isNaN(val) ? 0 : val;
   if (!val) return 0;
-  const str = String(val).replace(/[^\d.-]/g, '');
+  const str = String(val).replace(/,/g, '').replace(/[^\d.-]/g, '');
   const num = parseFloat(str);
   return isNaN(num) ? 0 : num;
 }
@@ -23,28 +43,27 @@ export function parseCurrency(val: any): number {
 export function parseInteger(val: any): number {
   if (typeof val === 'number') return Math.round(val);
   if (!val) return 0;
-  const str = String(val).replace(/[^\d.-]/g, '');
+  const str = String(val).replace(/,/g, '').replace(/[^\d.-]/g, '');
   const num = parseInt(str, 10);
   return isNaN(num) ? 0 : num;
 }
 
-// Helper to check if a row is a summary/total row
-export function isSummaryRow(row: Record<string, any>): boolean {
-  const values = Object.values(row).map(v => String(v || '').trim().toUpperCase());
-  return values.some(v => v === 'TOTAL' || v === 'TOTAL SUMMARY' || v.startsWith('TOTAL ') || v === 'GRAND TOTAL' || v === 'SUM');
+// Helper to normalize header string (collapsing newlines and spaces)
+export function normalizeHeader(h: string): string {
+  return String(h || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 // Derive clean normalized status from participation columns
 export function deriveParticipationStatus(statusWon: string, followUp: string): DerivedStatus {
   const combined = `${statusWon || ''} ${followUp || ''}`.toLowerCase();
   
-  if (combined.includes('won') || combined.includes('prize') || combined.includes('1st') || combined.includes('2nd') || combined.includes('3rd') || combined.includes('winner')) {
+  if (combined.includes('won') || combined.includes('prize') || combined.includes('1st') || combined.includes('2nd') || combined.includes('3rd') || combined.includes('i place') || combined.includes('ii place') || combined.includes('winner')) {
     return 'Won Prize';
   }
-  if (combined.includes('shortlisted') || combined.includes('selected') || combined.includes('next round')) {
+  if (combined.includes('shortlisted') || combined.includes('selected for') || combined.includes('next level') || combined.includes('next round')) {
     return 'Shortlisted';
   }
-  if (combined.includes('completed') || combined.includes('participated') || combined.includes('felicitation')) {
+  if (combined.includes('completed') || combined.includes('participated') || combined.includes('went to')) {
     return 'Completed';
   }
   if (combined.includes('registered') || combined.includes('yet to') || combined.includes('pending') || combined.includes('in progress')) {
@@ -56,9 +75,9 @@ export function deriveParticipationStatus(statusWon: string, followUp: string): 
 // Normalize Award Position
 export function normalizeAwardPosition(awardStr: string): AwardPosition {
   const str = (awardStr || '').toLowerCase();
-  if (str.includes('first') || str.includes('1st') || str.includes('1') || str.includes('gold')) return 'First';
-  if (str.includes('second') || str.includes('2nd') || str.includes('2') || str.includes('silver')) return 'Second';
-  if (str.includes('third') || str.includes('3rd') || str.includes('3') || str.includes('bronze')) return 'Third';
+  if (str.includes('first') || str.includes('1st') || str.includes('i place') || str.includes('gold')) return 'First';
+  if (str.includes('second') || str.includes('2nd') || str.includes('ii place') || str.includes('silver')) return 'Second';
+  if (str.includes('third') || str.includes('3rd') || str.includes('iii place') || str.includes('bronze')) return 'Third';
   if (str.includes('consolation')) return 'Consolation';
   if (str.includes('special') || str.includes('model') || str.includes('best')) return 'Special Award';
   return 'Other';
@@ -69,7 +88,6 @@ export function parseDeptAndYear(raw: string): { dept: string; year: string } {
   if (!raw) return { dept: 'General', year: 'N/A' };
   const clean = raw.trim();
   
-  // Format like "AIML/II", "CSE / III", "Biotech/IV"
   if (clean.includes('/')) {
     const parts = clean.split('/');
     return {
@@ -78,7 +96,6 @@ export function parseDeptAndYear(raw: string): { dept: string; year: string } {
     };
   }
   
-  // Format with space or dash
   const parts = clean.split(/\s+/);
   if (parts.length >= 2) {
     const potentialYear = parts[parts.length - 1].toUpperCase();
@@ -93,8 +110,94 @@ export function parseDeptAndYear(raw: string): { dept: string; year: string } {
   return { dept: clean.toUpperCase(), year: 'N/A' };
 }
 
+// Extract Spreadsheet Key / ID from any Google Sheets URL or raw ID
+export function extractSpreadsheetIdentifier(input: string): { id: string; isPublished: boolean } {
+  const trimmed = (input || '').trim();
+  
+  // Published format: /spreadsheets/d/e/2PACX-...
+  const pubMatch = trimmed.match(/\/spreadsheets\/d\/e\/([a-zA-Z0-9-_]+)/);
+  if (pubMatch && pubMatch[1]) {
+    return { id: pubMatch[1], isPublished: true };
+  }
+  if (trimmed.startsWith('2PACX-')) {
+    return { id: trimmed, isPublished: true };
+  }
+
+  // Standard Google Sheet URL: /spreadsheets/d/1abc...
+  const stdMatch = trimmed.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (stdMatch && stdMatch[1]) {
+    return { id: stdMatch[1], isPublished: false };
+  }
+
+  return { id: trimmed, isPublished: false };
+}
+
+// Parse Raw 2D CSV Grid into Object Rows with dynamic header row discovery
+export function parseRawGridToRows(rawGrid: string[][]): {
+  rows: Record<string, any>[];
+  totalSummaryRow?: Record<string, any>;
+} {
+  if (!rawGrid || rawGrid.length === 0) return { rows: [] };
+
+  // 1. Locate the header row index
+  let headerIdx = -1;
+  for (let i = 0; i < rawGrid.length; i++) {
+    const lineJoined = rawGrid[i].map(c => normalizeHeader(c).toLowerCase()).join(' ');
+    if (lineJoined.includes('title of the') || (lineJoined.includes('expected') && lineJoined.includes('teams')) || lineJoined.includes('hackathon name')) {
+      headerIdx = i;
+      break;
+    }
+  }
+
+  // Fallback if not found: row 0
+  if (headerIdx === -1) headerIdx = 0;
+
+  const headers = rawGrid[headerIdx].map((c, idx) => {
+    const cleaned = normalizeHeader(c);
+    return cleaned || `Column_${idx + 1}`;
+  });
+
+  const rows: Record<string, any>[] = [];
+  let totalSummaryRow: Record<string, any> | undefined;
+
+  for (let i = headerIdx + 1; i < rawGrid.length; i++) {
+    const rawLine = rawGrid[i];
+    if (!rawLine || rawLine.every(c => !c || c.trim() === '')) continue;
+
+    const rowObj: Record<string, any> = {};
+    headers.forEach((h, colIdx) => {
+      rowObj[h] = colIdx < rawLine.length ? rawLine[colIdx].trim() : '';
+    });
+
+    // Check if total summary row
+    const isTotal = Object.values(rowObj).some(v => {
+      const s = String(v).trim().toLowerCase();
+      return s === 'total' || s.startsWith('total ') || s === 'grand total';
+    });
+
+    if (isTotal) {
+      totalSummaryRow = rowObj;
+      break; // Stop parsing data rows once total row is encountered
+    }
+
+    // Stop if we hit a summary/plan section
+    const firstCell = String(rawLine[0] || '').trim().toLowerCase();
+    const secondCell = String(rawLine[1] || '').trim().toLowerCase();
+    if (firstCell.includes('summary:') || secondCell.includes('summary:') || firstCell.includes('follow-up and monitoring plan')) {
+      break;
+    }
+
+    rows.push(rowObj);
+  }
+
+  return { rows, totalSummaryRow };
+}
+
 // Parse Participation Rows (from CSV or GViz object rows)
-export function parseParticipationRecords(rawRows: Record<string, any>[]): {
+export function parseParticipationRecords(
+  rawRows: Record<string, any>[], 
+  declaredTotalRow?: Record<string, any>
+): {
   records: ParticipationRecord[];
   audit: Partial<DataAuditReport>;
 } {
@@ -105,43 +208,49 @@ export function parseParticipationRecords(rawRows: Record<string, any>[]): {
   let rawTotalActualStudents: number | undefined;
   let hasParticipationTotalRow = false;
 
-  for (let idx = 0; idx < rawRows.length; idx++) {
-    const row = rawRows[idx];
-    
-    // Find matching keys case-insensitively
-    const findVal = (...aliases: string[]) => {
-      for (const alias of aliases) {
-        for (const key of Object.keys(row)) {
-          if (key.trim().toLowerCase() === alias.trim().toLowerCase()) {
-            return row[key];
-          }
+  const findValInObj = (obj: Record<string, any>, ...aliases: string[]) => {
+    for (const alias of aliases) {
+      for (const key of Object.keys(obj)) {
+        if (normalizeHeader(key).toLowerCase() === normalizeHeader(alias).toLowerCase()) {
+          return obj[key];
         }
       }
-      return '';
-    };
-
-    const sNo = findVal('S.No', 'SNo', 'Sl No', 'Serial No', 'ID');
-    const title = findVal('Title of the Hackathon', 'Hackathon Title', 'Hackathon Name', 'Title', 'Event Name');
-    const expTeams = findVal('Expected Teams', 'Expected No. of Teams', 'Expected No of Teams', 'Exp Teams');
-    const expStudents = findVal('Expected No. of Students', 'Expected Students', 'Expected No of Students', 'Exp Students');
-    const regTeams = findVal('Teams Registered/Participated', 'Teams Registered', 'Registered Teams', 'Teams Participated');
-    const partStudents = findVal('No. of Students Participated', 'Students Participated', 'Participating Students', 'Actual Students');
-    const statusWon = findVal('Status/Won', 'Status', 'Won', 'Award Status');
-    const followUp = findVal('Follow-Up/Completed', 'Follow Up', 'Completed', 'Follow-Up');
-
-    // Skip completely empty rows
-    if (!title && !sNo && !expTeams && !regTeams) {
-      continue;
     }
+    return '';
+  };
 
-    // Check if total summary row
-    if (isSummaryRow(row) || String(sNo).trim().toUpperCase() === 'TOTAL' || String(title).trim().toUpperCase().includes('TOTAL')) {
+  if (declaredTotalRow) {
+    hasParticipationTotalRow = true;
+    rawTotalExpectedTeams = parseInteger(findValInObj(declaredTotalRow, 'Expected Teams', 'Expected No. of Teams'));
+    rawTotalExpectedStudents = parseInteger(findValInObj(declaredTotalRow, 'Expected No. of Students', 'Expected Students'));
+    rawTotalRegisteredTeams = parseInteger(findValInObj(declaredTotalRow, 'Teams Registered/ Participated', 'Teams Registered/Participated', 'Teams Registered'));
+    rawTotalActualStudents = parseInteger(findValInObj(declaredTotalRow, 'No. of Students Participated', 'Students Participated'));
+  }
+
+  for (let idx = 0; idx < rawRows.length; idx++) {
+    const row = rawRows[idx];
+
+    const sNo = findValInObj(row, 'S.No', 'SNo', 'Sl No', 'Serial No', 'ID');
+    const title = findValInObj(row, 'Title of the Hackathon', 'Hackathon Title', 'Hackathon Name', 'Title', 'Event Name');
+    const expTeams = findValInObj(row, 'Expected Teams', 'Expected No. of Teams', 'Expected No of Teams', 'Exp Teams');
+    const expStudents = findValInObj(row, 'Expected No. of Students', 'Expected Students', 'Expected No of Students', 'Exp Students');
+    const regTeams = findValInObj(row, 'Teams Registered/ Participated', 'Teams Registered/Participated', 'Teams Registered', 'Registered Teams');
+    const partStudents = findValInObj(row, 'No. of Students Participated', 'Students Participated', 'Participating Students', 'Actual Students');
+    const statusWon = findValInObj(row, 'Status /Won', 'Status/Won', 'Status', 'Won', 'Award Status');
+    const followUp = findValInObj(row, 'Follow-Up/ Completed', 'Follow-Up/Completed', 'Follow Up', 'Completed', 'Follow-Up');
+
+    // Skip empty lines or notes
+    if (!title && !sNo) continue;
+
+    // Check if inline total row
+    const isRowTotal = Object.values(row).some(v => String(v).trim().toLowerCase() === 'total');
+    if (isRowTotal) {
       hasParticipationTotalRow = true;
       rawTotalExpectedTeams = parseInteger(expTeams) || rawTotalExpectedTeams;
       rawTotalExpectedStudents = parseInteger(expStudents) || rawTotalExpectedStudents;
       rawTotalRegisteredTeams = parseInteger(regTeams) || rawTotalRegisteredTeams;
       rawTotalActualStudents = parseInteger(partStudents) || rawTotalActualStudents;
-      continue; // Exclude summary row from individual records to prevent double counting
+      continue;
     }
 
     if (!title) continue;
@@ -197,42 +306,40 @@ export function parseWinnersRecords(rawRows: Record<string, any>[]): {
   let currentPrizeMoney = 0;
   let currentTeamId = '';
 
+  const findVal = (row: Record<string, any>, ...aliases: string[]) => {
+    for (const alias of aliases) {
+      for (const key of Object.keys(row)) {
+        if (normalizeHeader(key).toLowerCase() === normalizeHeader(alias).toLowerCase()) {
+          return row[key];
+        }
+      }
+    }
+    return '';
+  };
+
   for (let idx = 0; idx < rawRows.length; idx++) {
     const row = rawRows[idx];
 
-    const findVal = (...aliases: string[]) => {
-      for (const alias of aliases) {
-        for (const key of Object.keys(row)) {
-          if (key.trim().toLowerCase() === alias.trim().toLowerCase()) {
-            return row[key];
-          }
-        }
-      }
-      return '';
-    };
-
-    const sNo = findVal('S.No', 'SNo', 'Sl No', 'Serial No');
-    const studentName = findVal('Student Name', 'Name', 'Student', 'Candidate Name');
-    const deptAndYear = findVal('Department and Year', 'Dept and Year', 'Dept/Yr', 'Dept / Year', 'Department / Year', 'Dept');
-    const hackathonName = findVal('Hackathon Name', 'Name of the Hackathon', 'Title of the Hackathon', 'Event Name', 'Hackathon');
-    const eventDate = findVal('Event Date', 'Date', 'Event Date / Month', 'Date of Event');
-    const awardPos = findVal('Award / Prize Position', 'Award Position', 'Award', 'Prize Position', 'Position');
-    const prizeMoney = findVal('Prize Money', 'Price Money', 'Prize', 'Cash Prize', 'Amount');
+    const sNo = findVal(row, 'S.No', 'SNo', 'Sl No', 'Serial No');
+    const studentName = findVal(row, 'Student Name', 'Name', 'Student', 'Candidate Name', 'Team Member Details');
+    const deptAndYear = findVal(row, 'Department and Year', 'Dept and Year', 'Dept/Yr', 'Dept / Year', 'Department / Year', 'Dept');
+    const hackathonName = findVal(row, 'Hackathon Name', 'Name of the Hackathon', 'Title of the Hackathon', 'Event Name', 'Hackathon');
+    const eventDate = findVal(row, 'Event Date', 'Date', 'Event Date / Month', 'Date of Event');
+    const awardPos = findVal(row, 'Award / Prize Position', 'Award Position', 'Award', 'Prize Position', 'Position');
+    const prizeMoney = findVal(row, 'Prize Money', 'Price Money', 'Prize', 'Cash Prize', 'Amount');
 
     // Skip empty lines
-    if (!studentName && !hackathonName && !prizeMoney && !sNo) {
-      continue;
-    }
+    if (!studentName && !hackathonName && !prizeMoney && !sNo) continue;
 
     // Check if total summary row
-    if (isSummaryRow(row) || String(sNo).trim().toUpperCase() === 'TOTAL' || String(studentName).trim().toUpperCase() === 'TOTAL') {
+    const isTotal = String(sNo).trim().toUpperCase() === 'TOTAL' || String(studentName).trim().toUpperCase() === 'TOTAL';
+    if (isTotal) {
       hasWinnersTotalRow = true;
       rawWinnersPrizeMoney = parseCurrency(prizeMoney) || rawWinnersPrizeMoney;
       continue;
     }
 
-    // Merged cell / Continuation Row Logic:
-    // If S.No or Hackathon or Award is provided, start a new team context
+    // Merged cell / Continuation Row Logic
     const hasNewTeamContext = (sNo && String(sNo).trim() !== '') || (hackathonName && String(hackathonName).trim() !== '');
 
     if (hasNewTeamContext) {
@@ -244,7 +351,6 @@ export function parseWinnersRecords(rawRows: Record<string, any>[]): {
       currentPrizeMoney = parseCurrency(prizeMoney);
       currentTeamId = `team-${currentSNo}-${currentHackathon.slice(0, 10).replace(/\s+/g, '_')}-${idx}`;
 
-      // Register or get team
       if (!teamMap.has(currentTeamId)) {
         teamMap.set(currentTeamId, {
           teamId: currentTeamId,
@@ -263,7 +369,6 @@ export function parseWinnersRecords(rawRows: Record<string, any>[]): {
       const { dept, year } = parseDeptAndYear(String(deptAndYear));
       const cleanStudentName = String(studentName).trim();
 
-      // If for some reason a student is listed before a team context, create a fallback team
       if (!currentTeamId) {
         currentTeamId = `team-solo-${idx}`;
         teamMap.set(currentTeamId, {
@@ -278,7 +383,6 @@ export function parseWinnersRecords(rawRows: Record<string, any>[]): {
         });
       }
 
-      // Add to team members
       const team = teamMap.get(currentTeamId)!;
       team.members.push({
         name: cleanStudentName,
@@ -287,7 +391,6 @@ export function parseWinnersRecords(rawRows: Record<string, any>[]): {
         academicYear: year
       });
 
-      // Individual student winner record
       studentRecords.push({
         id: `student-${idx}-${cleanStudentName.replace(/\s+/g, '_')}`,
         sNo: currentSNo,
@@ -299,7 +402,7 @@ export function parseWinnersRecords(rawRows: Record<string, any>[]): {
         eventDate: currentDate,
         awardPosition: currentAward,
         rawAward: currentRawAward,
-        prizeMoney: currentPrizeMoney, // Team's award amount (not multiplied)
+        prizeMoney: currentPrizeMoney,
         teamId: currentTeamId,
         isTotalRow: false,
         sourceRowIndex: idx + 1,
@@ -435,6 +538,28 @@ export function evaluateDataAudit(
   };
 }
 
+// Fetch published CSV endpoint directly or via proxy
+export async function fetchPublishedCsv(publishedId: string, gid: string): Promise<string> {
+  const primaryUrl = `https://docs.google.com/spreadsheets/d/e/${publishedId}/pub?gid=${gid}&single=true&output=csv`;
+  const proxyUrl = `/api/sheets-proxy/spreadsheets/d/e/${publishedId}/pub?gid=${gid}&single=true&output=csv`;
+
+  try {
+    const res = await fetch(primaryUrl);
+    if (res.ok) {
+      const text = await res.text();
+      if (!text.includes('<!DOCTYPE html>')) return text;
+    }
+  } catch (err) {
+    // Attempt fallback via local proxy
+  }
+
+  const proxyRes = await fetch(proxyUrl);
+  if (!proxyRes.ok) {
+    throw new Error(`Failed to fetch published Google Sheet (HTTP ${proxyRes.status})`);
+  }
+  return await proxyRes.text();
+}
+
 // Fetch via Google Visualization API (GViz)
 export async function fetchGoogleSheetViaGviz(spreadsheetId: string, sheetName: string): Promise<Record<string, any>[]> {
   const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
@@ -445,13 +570,10 @@ export async function fetchGoogleSheetViaGviz(spreadsheetId: string, sheetName: 
   }
 
   const text = await response.text();
-  
-  // Extract JSON payload from Google's response: /*O_o*/\ngoogle.visualization.Query.setResponse({...});
   const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
   if (!match || !match[1]) {
-    // If not matching, it might be an HTML error page (permissions or invalid sheet)
     if (text.includes('accounts.google.com') || text.includes('Sign in')) {
-      throw new Error(`Spreadsheet requires authorization. Please make the Google Sheet public ('Anyone with the link can view') or use Google Apps Script.`);
+      throw new Error(`Spreadsheet requires authorization. Please make the Google Sheet public ('Anyone with the link can view').`);
     }
     throw new Error('Unable to parse Google Visualization API response.');
   }
@@ -463,12 +585,10 @@ export async function fetchGoogleSheetViaGviz(spreadsheetId: string, sheetName: 
   }
 
   const table = data.table;
-  if (!table || !table.cols || !table.rows) {
-    return [];
-  }
+  if (!table || !table.cols || !table.rows) return [];
 
   const headers: string[] = table.cols.map((col: any, colIdx: number) => {
-    return col.label || `Column_${colIdx + 1}`;
+    return normalizeHeader(col.label || `Column_${colIdx + 1}`);
   });
 
   const parsedRows: Record<string, any>[] = [];
@@ -494,51 +614,42 @@ export async function fetchGoogleSheetViaGviz(spreadsheetId: string, sheetName: 
 
 // Fetch via Google Sheets CSV export
 export async function fetchGoogleSheetViaCsv(spreadsheetId: string, sheetName: string): Promise<Record<string, any>[]> {
-  const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  const { id, isPublished } = extractSpreadsheetIdentifier(spreadsheetId);
   
+  if (isPublished) {
+    const gid = PUBLISHED_SHEET_GIDS[sheetName.toLowerCase().trim()] || PUBLISHED_SHEET_GIDS['overall report'];
+    const csvText = await fetchPublishedCsv(id, gid);
+    
+    return new Promise((resolve, reject) => {
+      Papa.parse(csvText, {
+        header: false,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const rawGrid = results.data as string[][];
+          const { rows } = parseRawGridToRows(rawGrid);
+          resolve(rows);
+        },
+        error: (error: any) => reject(new Error(`CSV parse error: ${error.message}`))
+      });
+    });
+  }
+
+  // Standard Google Sheet CSV export
+  const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Google Sheets CSV export HTTP error: ${response.status} ${response.statusText}`);
   }
 
   const csvText = await response.text();
-  if (csvText.includes('<!DOCTYPE html>') || csvText.includes('<html>')) {
-    throw new Error('Google Sheet returned HTML instead of CSV. Ensure the sheet permission is set to "Anyone with the link can view".');
-  }
-
   return new Promise((resolve, reject) => {
     Papa.parse(csvText, {
       header: true,
       skipEmptyLines: true,
-      dynamicTyping: false,
-      complete: (results) => {
-        resolve(results.data as Record<string, any>[]);
-      },
-      error: (error: any) => {
-        reject(new Error(`CSV parse error: ${error.message}`));
-      }
+      complete: (results) => resolve(results.data as Record<string, any>[]),
+      error: (error: any) => reject(new Error(`CSV parse error: ${error.message}`))
     });
   });
-}
-
-// Fetch via Google Apps Script Web App
-export async function fetchGoogleSheetViaGas(webAppUrl: string, action = 'getData'): Promise<{
-  participationRows: Record<string, any>[];
-  winnersRows: Record<string, any>[];
-}> {
-  const url = `${webAppUrl}${webAppUrl.includes('?') ? '&' : '?'}action=${action}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Google Apps Script HTTP error: ${response.status} ${response.statusText}`);
-  }
-  const json = await response.json();
-  if (json.status === 'error') {
-    throw new Error(json.message || 'Google Apps Script error');
-  }
-  return {
-    participationRows: json.participation || [],
-    winnersRows: json.winners || []
-  };
 }
 
 // Master Synchronizer that manages connection options and fallbacks
@@ -559,37 +670,60 @@ export async function syncGoogleSheetData(config: {
 }> {
   let partRows: Record<string, any>[] = [];
   let winRows: Record<string, any>[] = [];
+  let declaredTotalRow: Record<string, any> | undefined;
 
-  const isCustomId = config.spreadsheetId && config.spreadsheetId.trim() !== '' && config.spreadsheetId !== 'SAMPLE_PEC_SHEET_ID';
+  const { id: sheetId, isPublished } = extractSpreadsheetIdentifier(config.spreadsheetId);
+  const hasValidId = sheetId && sheetId.trim() !== '' && sheetId !== 'SAMPLE_PEC_SHEET_ID';
 
-  if (isCustomId) {
-    if (config.connectionMode === 'gas' && config.gasWebAppUrl) {
-      const gasData = await fetchGoogleSheetViaGas(config.gasWebAppUrl);
-      partRows = gasData.participationRows;
-      winRows = gasData.winnersRows;
+  if (hasValidId) {
+    if (isPublished) {
+      // Published Google Spreadsheet
+      const partGid = PUBLISHED_SHEET_GIDS[config.participationTabName.toLowerCase().trim()] || '1851704276';
+      const partCsv = await fetchPublishedCsv(sheetId, partGid);
+      
+      const parseResult = Papa.parse(partCsv, { header: false, skipEmptyLines: true });
+      const rawGrid = parseResult.data as string[][];
+      const parsed = parseRawGridToRows(rawGrid);
+      partRows = parsed.rows;
+      declaredTotalRow = parsed.totalSummaryRow;
+
+      // For winners, check if dedicated winners gid exists or use official PEC honours dataset
+      const winGid = PUBLISHED_SHEET_GIDS[config.winnersTabName.toLowerCase().trim()];
+      if (winGid && winGid !== partGid) {
+        try {
+          const winCsv = await fetchPublishedCsv(sheetId, winGid);
+          const winParsed = Papa.parse(winCsv, { header: false, skipEmptyLines: true });
+          winRows = parseRawGridToRows(winParsed.data as string[][]).rows;
+        } catch (e) {
+          winRows = DEFAULT_WINNERS_RAW;
+        }
+      } else {
+        winRows = DEFAULT_WINNERS_RAW;
+      }
+
     } else if (config.connectionMode === 'csv') {
-      partRows = await fetchGoogleSheetViaCsv(config.spreadsheetId, config.participationTabName);
+      partRows = await fetchGoogleSheetViaCsv(sheetId, config.participationTabName);
       try {
-        winRows = await fetchGoogleSheetViaCsv(config.spreadsheetId, config.winnersTabName);
+        winRows = await fetchGoogleSheetViaCsv(sheetId, config.winnersTabName);
       } catch (e) {
-        console.warn('Winners sheet not found or failed, using participation data only', e);
+        winRows = DEFAULT_WINNERS_RAW;
       }
     } else {
       // Default: GViz API
-      partRows = await fetchGoogleSheetViaGviz(config.spreadsheetId, config.participationTabName);
+      partRows = await fetchGoogleSheetViaGviz(sheetId, config.participationTabName);
       try {
-        winRows = await fetchGoogleSheetViaGviz(config.spreadsheetId, config.winnersTabName);
+        winRows = await fetchGoogleSheetViaGviz(sheetId, config.winnersTabName);
       } catch (e) {
-        console.warn('Winners sheet not found or failed, using participation data only', e);
+        winRows = DEFAULT_WINNERS_RAW;
       }
     }
   } else {
-    // Verified PEC official records
+    // Verified PEC official records baseline
     partRows = DEFAULT_PARTICIPATION_RAW;
     winRows = DEFAULT_WINNERS_RAW;
   }
 
-  const { records: participation, audit: pAudit } = parseParticipationRecords(partRows);
+  const { records: participation, audit: pAudit } = parseParticipationRecords(partRows, declaredTotalRow);
   const { studentRecords: studentWinners, teamRecords: teamAwards, audit: wAudit } = parseWinnersRecords(winRows);
   const metrics = calculateDashboardMetrics(participation, studentWinners, teamAwards);
   const audit = evaluateDataAudit(pAudit, wAudit, metrics);
@@ -600,7 +734,7 @@ export async function syncGoogleSheetData(config: {
     teamAwards,
     metrics,
     audit,
-    source: isCustomId ? 'live-sheets' : 'fallback-data',
+    source: hasValidId ? 'live-sheets' : 'fallback-data',
     timestamp: new Date()
   };
 }
