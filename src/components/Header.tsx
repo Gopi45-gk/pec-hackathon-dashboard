@@ -10,6 +10,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { SheetConnectionConfig } from '../types';
+import { CollegeLogo } from './CollegeLogo';
 
 interface HeaderProps {
   lastUpdated: Date | null;
@@ -71,11 +72,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Left: Logo & Titles */}
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shrink-0 shadow-sm hover:border-slate-300 transition-colors">
-              <img 
-                src="/pec-logo.svg" 
-                alt="Prathyusha Engineering College Logo" 
-                className="w-full h-full object-contain"
-              />
+              <CollegeLogo className="w-full h-full" fallbackSize="sm" />
             </div>
             <div>
               <div className="flex items-center gap-2">

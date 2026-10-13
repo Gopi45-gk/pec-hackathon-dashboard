@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { CollegeLogo } from './CollegeLogo';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -56,11 +57,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         {/* College Logo Emblem */}
         <div className="relative mb-6 group">
           <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-white p-2.5 shadow-card border border-slate-200/80 flex items-center justify-center transition-transform duration-700 transform hover:scale-105">
-            <img 
-              src="/pec-logo.svg" 
-              alt="Prathyusha Engineering College Logo" 
-              className="w-full h-full object-contain"
-            />
+            <CollegeLogo className="w-full h-full" fallbackSize="lg" />
           </div>
           {/* Subtle concentric accent ring */}
           <div className="absolute -inset-2 rounded-3xl border border-blue-100/60 -z-10 animate-pulse"></div>
