@@ -144,10 +144,10 @@ export const ParticipationTable: React.FC<ParticipationTableProps> = ({
       </div>
 
       {/* Table View */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-[620px] overflow-y-auto">
         <table className="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr className="bg-slate-100 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+          <thead className="sticky top-0 z-10 bg-slate-100 shadow-[0_1px_2px_0_rgba(0,0,0,0.06)]">
+            <tr className="border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
               <th className="py-3 px-4 w-12 text-center">S.No</th>
               <th 
                 className="py-3 px-4 cursor-pointer hover:text-navy-900 select-none"

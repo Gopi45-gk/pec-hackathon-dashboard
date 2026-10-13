@@ -24,6 +24,12 @@ import {
   ConnectionSettingsModal 
 } from './components/ConnectionSettingsModal';
 import { 
+  SplashScreen 
+} from './components/SplashScreen';
+import { 
+  WinnersView 
+} from './components/WinnersView';
+import { 
   syncGoogleSheetData, 
   fetchGoogleSheetViaGviz,
   fetchGoogleSheetViaCsv,
@@ -52,8 +58,17 @@ import {
 const STORAGE_KEY_CONFIG = 'pec_hackathon_connection_config_v1';
 
 export const App: React.FC = () => {
-  // Navigation active tab
+  // Navigation active tab: 1. Overview, 2. Participation, 3. Winners & Awards, 4. Analytics, 5. Data Quality
   const [activeTab, setActiveTab] = useState<'overview' | 'participation' | 'winners' | 'analytics' | 'audit'>('overview');
+
+  // Initial visit college branded splash screen (1.8-2.5s duration, session-persisted)
+  const [showSplash, setShowSplash] = useState<boolean>(() => {
+    try {
+      return !sessionStorage.getItem('pec_splash_shown_v1');
+    } catch {
+      return true;
+    }
+  });
 
   // Connection config state (loads from localStorage or vite env defaults)
   const [connectionConfig, setConnectionConfig] = useState<SheetConnectionConfig>(() => {
@@ -277,6 +292,18 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col">
       
+      {/* 0. College-Branded Splash Screen (Initial Entry Only) */}
+      {showSplash && (
+        <SplashScreen 
+          onComplete={() => {
+            setShowSplash(false);
+            try {
+              sessionStorage.setItem('pec_splash_shown_v1', 'true');
+            } catch {}
+          }} 
+        />
+      )}
+
       {/* 1. Header */}
       <Header
         lastUpdated={lastUpdated}
@@ -338,7 +365,7 @@ export const App: React.FC = () => {
               }`}
             >
               <BarChart3 className="w-3.5 h-3.5" />
-              <span>Visual Analytics</span>
+              <span>Analytics</span>
             </button>
 
             <button
@@ -350,7 +377,7 @@ export const App: React.FC = () => {
               }`}
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Data Audit & Transparency</span>
+              <span>Data Quality</span>
             </button>
 
           </nav>
@@ -454,9 +481,10 @@ export const App: React.FC = () => {
 
         {activeTab === 'winners' && (
           <div className="space-y-6">
-            <WinnersTable
+            <WinnersView
               studentWinners={filteredStudentWinners}
               teamAwards={filteredTeamAwards}
+              metrics={activeMetrics}
               searchQuery={filters.searchQuery}
               departmentFilter={filters.department}
               yearFilter={filters.academicYear}

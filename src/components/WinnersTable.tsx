@@ -232,12 +232,12 @@ export const WinnersTable: React.FC<WinnersTableProps> = ({
       </div>
 
       {/* Table Wrapper */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-[620px] overflow-y-auto">
         {viewMode === 'students' ? (
           /* 1. STUDENT-BY-STUDENT VIEW */
           <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="bg-slate-100 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+            <thead className="sticky top-0 z-10 bg-slate-100 shadow-[0_1px_2px_0_rgba(0,0,0,0.06)]">
+              <tr className="border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="py-3 px-4 w-12 text-center">S.No</th>
                 <th 
                   className="py-3 px-4 cursor-pointer hover:text-navy-900 select-none"
@@ -340,8 +340,8 @@ export const WinnersTable: React.FC<WinnersTableProps> = ({
         ) : (
           /* 2. TEAM AWARD VIEW */
           <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="bg-slate-100 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+            <thead className="sticky top-0 z-10 bg-slate-100 shadow-[0_1px_2px_0_rgba(0,0,0,0.06)]">
+              <tr className="border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="py-3 px-4 w-12 text-center">S.No</th>
                 <th className="py-3 px-4">Hackathon Event</th>
                 <th className="py-3 px-4">Event Date</th>

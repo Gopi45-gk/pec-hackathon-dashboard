@@ -6,9 +6,8 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   Clock, 
-  FileSpreadsheet, 
-  Building2,
-  Printer
+  Printer,
+  Calendar
 } from 'lucide-react';
 import { SheetConnectionConfig } from '../types';
 
@@ -29,7 +28,6 @@ export const Header: React.FC<HeaderProps> = ({
   errorMessage,
   onRefresh,
   onOpenSettings,
-  connectionConfig
 }) => {
   const formatTime = (date: Date | null) => {
     if (!date) return 'Not yet synced';
@@ -46,71 +44,85 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-subtle">
-      {/* Top institution bar */}
-      <div className="bg-navy-900 text-white text-xs py-1.5 px-4 sm:px-8 border-b border-navy-800">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 tracking-wide font-medium">
-            <Building2 className="w-3.5 h-3.5 text-blue-300" />
+    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-[0_1px_3px_0_rgba(15,23,42,0.03)]">
+      
+      {/* Top institutional strip */}
+      <div className="bg-navy-950 text-white text-[11px] py-1 px-4 sm:px-8 border-b border-navy-900">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2 tracking-wide font-medium text-slate-300">
             <span>PRATHYUSHA ENGINEERING COLLEGE</span>
-            <span className="text-navy-300 font-light hidden sm:inline">|</span>
-            <span className="text-navy-200 hidden sm:inline">AN AUTONOMOUS INSTITUTION</span>
-          </div>
-          <div className="flex items-center gap-4 text-navy-200 text-[11px]">
-            <span className="bg-navy-800 px-2 py-0.5 rounded text-blue-200 border border-navy-700">
-              Odd Semester · Academic Year 2026–2027
+            <span className="text-slate-600 hidden sm:inline">•</span>
+            <span className="text-slate-400 text-[10px] hidden sm:inline uppercase tracking-widest font-semibold">
+              Autonomous Institution
             </span>
-            <span className="hidden md:inline">Research Day Achievement Cycle</span>
+          </div>
+          <div className="flex items-center gap-3 text-slate-400 text-[10px]">
+            <span className="hidden sm:inline">Affiliated to Anna University</span>
+            <span className="text-slate-600 hidden sm:inline">•</span>
+            <span className="text-blue-300 font-mono">Academic Year 2026–2027</span>
           </div>
         </div>
       </div>
 
-      {/* Main dashboard navigation header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3.5 sm:py-4">
+      {/* Main Bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3.5">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           
-          {/* Title and subtitle */}
-          <div>
-            <div className="flex items-center gap-2.5">
-              <span className="bg-blue-50 text-pec-blue border border-blue-200 p-2 rounded-lg font-bold text-lg shadow-sm">
-                PEC
-              </span>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-navy-950 tracking-tight leading-tight">
-                  PEC – HACKATHON PARTICIPATION & WINNERS DASHBOARD 2026
+          {/* Left: Logo & Titles */}
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shrink-0 shadow-sm hover:border-slate-300 transition-colors">
+              <img 
+                src="/pec-logo.svg" 
+                alt="Prathyusha Engineering College Logo" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg sm:text-xl font-bold text-navy-950 tracking-tight leading-tight">
+                  Hackathon Analytics
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-500 font-normal mt-0.5">
-                  Single Source of Truth: Live Google Sheets · Automated Real-time Synchronization
-                </p>
+                <span className="bg-slate-100 text-slate-600 text-[10px] font-semibold px-2 py-0.5 rounded border border-slate-200 uppercase tracking-wider">
+                  Live BI
+                </span>
               </div>
+              <p className="text-xs text-slate-500 font-normal mt-0.5">
+                Participation, Progress &amp; Achievements | 2026
+              </p>
             </div>
           </div>
 
-          {/* Action controls & sync badge */}
-          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+          {/* Right: Metadata & Actions */}
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs">
             
-            {/* Live Data Source Status Badge */}
+            {/* Reporting Period */}
+            <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 text-[11px]">
+              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+              <span>Reporting: <b>Odd Semester 2026</b></span>
+            </div>
+
+            {/* Google Sheets Connection Status Badge */}
             <div 
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                 syncStatus === 'refreshing'
                   ? 'bg-blue-50 text-blue-700 border-blue-200'
                   : syncStatus === 'error'
                   ? 'bg-rose-50 text-rose-700 border-rose-200'
                   : dataSourceType === 'live-sheets'
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                   : 'bg-amber-50 text-amber-800 border-amber-200'
               }`}
-              title={errorMessage || (dataSourceType === 'live-sheets' ? 'Connected to live Google Sheets' : 'Using verified PEC records (Connect your Google Sheet ID)')}
+              title={errorMessage || (dataSourceType === 'live-sheets' ? 'Connected to live Google Sheets' : 'Using verified baseline records')}
             >
               {syncStatus === 'refreshing' ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
-                  <span>Refreshing Data...</span>
+                  <span>Syncing...</span>
                 </>
               ) : syncStatus === 'error' ? (
                 <>
                   <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
-                  <span className="font-semibold">Sync Error (Using Cache)</span>
+                  <span className="font-semibold">Sync Notice</span>
                 </>
               ) : dataSourceType === 'live-sheets' ? (
                 <>
@@ -119,50 +131,49 @@ export const Header: React.FC<HeaderProps> = ({
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Google Sheets Connected</span>
+                  <span className="font-semibold">Google Sheets Connected</span>
                 </>
               ) : (
                 <>
                   <Database className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Verified PEC Records (Snapshot)</span>
+                  <span>Verified Snapshot</span>
                 </>
               )}
             </div>
 
-            {/* Last updated timestamp */}
-            <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-md border border-slate-200">
+            {/* Last Updated Timestamp */}
+            <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200">
               <Clock className="w-3.5 h-3.5 text-slate-400" />
-              <span>Synced: <b className="text-slate-700 font-semibold">{formatTime(lastUpdated)}</b></span>
-              {lastUpdated && <span className="text-slate-400">({getRelativeTime(lastUpdated)})</span>}
+              <span>Synced: <b className="text-slate-800 font-mono font-semibold">{formatTime(lastUpdated)}</b></span>
+              {lastUpdated && <span className="text-slate-400 text-[11px]">({getRelativeTime(lastUpdated)})</span>}
             </div>
 
             {/* Refresh Now Button */}
             <button
               onClick={onRefresh}
               disabled={syncStatus === 'refreshing'}
-              className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-navy-800 border border-slate-300 active:bg-slate-100 disabled:opacity-50 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-navy-900 border border-slate-300 active:bg-slate-100 disabled:opacity-50 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
               title="Fetch fresh data from Google Sheets immediately"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${syncStatus === 'refreshing' ? 'animate-spin text-blue-600' : 'text-slate-600'}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${syncStatus === 'refreshing' ? 'animate-spin text-blue-600' : 'text-slate-500'}`} />
               <span>Refresh Now</span>
             </button>
 
-            {/* Connection Settings Button */}
+            {/* Settings button */}
             <button
               onClick={onOpenSettings}
-              className="inline-flex items-center gap-1.5 bg-navy-900 hover:bg-navy-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
-              title="Configure Google Spreadsheet ID, Tab Names, and Refresh Interval"
+              className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors border border-slate-200"
+              title="Google Sheet configuration"
             >
-              <Settings className="w-3.5 h-3.5 text-blue-300" />
-              <span className="hidden sm:inline">Sheet Setup</span>
-              <span className="sm:hidden">Setup</span>
+              <Settings className="w-3.5 h-3.5 text-slate-600" />
+              <span className="hidden sm:inline">Settings</span>
             </button>
 
-            {/* Print action */}
+            {/* Print button */}
             <button
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors border border-slate-200"
-              title="Print official dashboard report"
+              className="inline-flex items-center p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
+              title="Print official report"
             >
               <Printer className="w-3.5 h-3.5" />
             </button>
@@ -170,7 +181,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Sync Error Banner if refresh fails (preserves existing data view) */}
+        {/* Sync Error Banner if refresh fails */}
         {syncStatus === 'error' && errorMessage && (
           <div className="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 flex items-start justify-between gap-3 animate-fadeIn">
             <div className="flex items-start gap-2">
@@ -179,7 +190,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <p className="font-semibold text-rose-900">Google Sheets Sync Notice</p>
                 <p className="mt-0.5 text-rose-700">{errorMessage}</p>
                 <p className="mt-1 text-[11px] text-slate-600">
-                  Note: Preserving the last successfully loaded records. Check that your Google Sheet has "Anyone with the link can view" enabled, or verify the Sheet ID in Settings.
+                  Displaying last successfully loaded records.
                 </p>
               </div>
             </div>

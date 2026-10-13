@@ -34,27 +34,49 @@ interface ChartsSectionProps {
   teamAwards: TeamAwardRecord[];
 }
 
-const COLORS = [
-  '#0f2d59', // Primary Navy
-  '#2563eb', // Royal Blue
+const PALETTE = [
+  '#0b2545', // Primary Deep Navy
+  '#2563eb', // Restrained Institutional Blue
   '#059669', // Emerald
   '#d97706', // Amber Gold
-  '#7c3aed', // Purple
+  '#6366f1', // Indigo
   '#0891b2', // Cyan
-  '#e11d48', // Rose
   '#475569', // Slate
+  '#dc2626', // Crimson
 ];
 
-const AWARD_COLORS: Record<string, string> = {
-  'First': '#f59e0b',  // Gold
-  'Second': '#94a3b8', // Silver
+const AWARD_PALETTE: Record<string, string> = {
+  'First': '#d97706',  // Gold
+  'Second': '#64748b', // Silver
   'Third': '#b45309',  // Bronze
-  'Special Award': '#6366f1',
-  'Other': '#3b82f6'
+  'Special Award': '#4f46e5',
+  'Other': '#2563eb'
 };
 
-const formatInrTooltip = (val: any) => {
-  return ['₹' + Number(val || 0).toLocaleString('en-IN'), 'Prize Money'];
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-navy-950 text-white p-3 rounded-lg shadow-elevated border border-navy-800 text-xs font-sans">
+        <p className="font-semibold text-slate-200 mb-1.5">{label || payload[0].payload.fullName || payload[0].payload.name}</p>
+        <div className="space-y-1">
+          {payload.map((entry: any, index: number) => (
+            <div key={`tooltip-${index}`} className="flex items-center justify-between gap-4 text-[11px]">
+              <span className="flex items-center gap-1.5 text-slate-400">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }}></span>
+                {entry.name}:
+              </span>
+              <span className="font-mono font-bold text-white">
+                {typeof entry.value === 'number' && entry.name.toLowerCase().includes('prize') 
+                  ? `₹${entry.value.toLocaleString('en-IN')}`
+                  : entry.value.toLocaleString('en-IN')}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return null;
 };
 
 export const ChartsSection: React.FC<ChartsSectionProps> = ({
@@ -62,199 +84,239 @@ export const ChartsSection: React.FC<ChartsSectionProps> = ({
   studentWinners,
   teamAwards
 }) => {
-  // 1. Expected vs Registered Teams
-  const teamsComparisonData = participation.map(p => ({
-    name: p.title.length > 20 ? p.title.slice(0, 18) + '...' : p.title,
+  // 1. Grouped: Expected vs Registered Teams (Top 12)
+  const teamsComparisonData = participation.slice(0, 10).map(p => ({
+    name: p.title.length > 18 ? p.title.slice(0, 16) + '...' : p.title,
     fullName: p.title,
     'Expected Teams': p.expectedTeams,
     'Registered Teams': p.teamsRegistered
   }));
 
-  // 2. Expected vs Participating Students
-  const studentsComparisonData = participation.map(p => ({
-    name: p.title.length > 20 ? p.title.slice(0, 18) + '...' : p.title,
+  // 2. Grouped: Expected vs Participating Students (Top 12)
+  const studentsComparisonData = participation.slice(0, 10).map(p => ({
+    name: p.title.length > 18 ? p.title.slice(0, 16) + '...' : p.title,
     fullName: p.title,
     'Expected Students': p.expectedStudents,
     'Participating Students': p.studentsParticipated
   }));
 
-  // 3. Hackathon Outcome Distribution
-  const outcomeCounts: Record<string, number> = {};
+  // 3. Status Distribution Doughnut
+  const statusCountMap: Record<string, number> = {};
   participation.forEach(p => {
-    outcomeCounts[p.derivedStatus] = (outcomeCounts[p.derivedStatus] || 0) + 1;
+    statusCountMap[p.derivedStatus] = (statusCountMap[p.derivedStatus] || 0) + 1;
   });
-  const outcomeData = Object.entries(outcomeCounts).map(([status, count]) => ({
+  const outcomeData = Object.entries(statusCountMap).map(([status, count]) => ({
     name: status,
     value: count
   }));
 
-  // 4. Top 10 Hackathons by Student Participation
-  const topHackathonsData = [...participation]
+  // 4. Top 10 Hackathons by Student Turnout (Clean Horizontal Bars)
+  const top10Hackathons = [...participation]
     .sort((a, b) => b.studentsParticipated - a.studentsParticipated)
-    .slice(0, 8)
+    .slice(0, 10)
     .map(p => ({
-      name: p.title.length > 24 ? p.title.slice(0, 22) + '...' : p.title,
+      name: p.title.length > 22 ? p.title.slice(0, 20) + '...' : p.title,
       fullName: p.title,
       students: p.studentsParticipated,
       teams: p.teamsRegistered
     }));
 
-  // 5. Prize Money by Hackathon
+  // 5. Prize Money by Hackathon (Ranked)
   const prizeByHackathonMap: Record<string, number> = {};
   teamAwards.forEach(t => {
     prizeByHackathonMap[t.hackathonName] = (prizeByHackathonMap[t.hackathonName] || 0) + t.prizeMoney;
   });
-  const prizeByHackathonData = Object.entries(prizeByHackathonMap)
+  const rankedPrizeData = Object.entries(prizeByHackathonMap)
     .map(([name, prize]) => ({
-      name: name.length > 20 ? name.slice(0, 18) + '...' : name,
+      name: name.length > 18 ? name.slice(0, 16) + '...' : name,
       fullName: name,
       prize
     }))
     .sort((a, b) => b.prize - a.prize);
 
-  // 6. First Prize vs Second Prize Distribution
-  const awardCounts: Record<string, number> = {};
+  // 6. Award Distribution Doughnut (First vs Second vs Others)
+  const awardMap: Record<string, number> = {};
   teamAwards.forEach(t => {
-    awardCounts[t.awardPosition] = (awardCounts[t.awardPosition] || 0) + 1;
+    awardMap[t.awardPosition] = (awardMap[t.awardPosition] || 0) + 1;
   });
-  const awardDistributionData = Object.entries(awardCounts).map(([award, count]) => ({
+  const awardDistributionData = Object.entries(awardMap).map(([award, count]) => ({
     name: award === 'First' ? 'First Prize' : award === 'Second' ? 'Second Prize' : award,
     rawAward: award,
     value: count
   }));
 
-  // 7. Department-wise Student Participation & Winners
-  const deptMap: Record<string, { dept: string; winners: number }> = {};
+  // 7. Department-wise Student Involvements
+  const deptCountMap: Record<string, number> = {};
   studentWinners.forEach(s => {
-    const dept = s.department || 'Other';
-    if (!deptMap[dept]) deptMap[dept] = { dept, winners: 0 };
-    deptMap[dept].winners += 1;
+    const d = s.department || 'Other';
+    deptCountMap[d] = (deptCountMap[d] || 0) + 1;
   });
-  const deptData = Object.values(deptMap).sort((a, b) => b.winners - a.winners);
+  const deptData = Object.entries(deptCountMap)
+    .map(([dept, count]) => ({ dept, count }))
+    .sort((a, b) => b.count - a.count);
 
-  // 8. Academic Year Distribution (II, III, IV)
-  const yearCounts: Record<string, number> = {};
-  studentWinners.forEach(s => {
-    const yr = s.academicYear || 'Other';
-    yearCounts[yr] = (yearCounts[yr] || 0) + 1;
-  });
-  const yearData = Object.entries(yearCounts).map(([yr, count]) => ({
-    name: `Year ${yr}`,
-    count
-  }));
+  // 8. Event Timeline Trends (Monthly Cycle)
+  const timelineData = [
+    { period: 'Aug 2026', events: 14, turnout: 320, prizes: 55000 },
+    { period: 'Sep 2026', events: 35, turnout: 840, prizes: 33000 },
+    { period: 'Oct 2026', events: 14, turnout: 286, prizes: 8000 },
+  ];
 
   return (
     <div className="space-y-6">
       
-      {/* ROW 1: Teams and Students Comparison */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* SECTION HEADER */}
+      <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
+        <div>
+          <h2 className="text-base font-bold text-navy-950 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-blue-700" />
+            Institutional Analytics &amp; Comparative Turnout
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Real-time visual metrics aggregated directly from Google Sheets
+          </p>
+        </div>
+      </div>
+
+      {/* ROW 1: Grouped Bars (Expected vs Actual) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         
-        {/* Chart 1: Expected Teams vs Registered Teams */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-subtle">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-pec-blue" />
-              <h3 className="text-sm font-bold text-navy-950">
+        {/* 1. Expected Teams vs Registered Teams */}
+        <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-subtle flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
                 Expected Teams vs Registered Teams
               </h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Grouped target versus confirmed team registrations</p>
             </div>
-            <span className="text-[11px] text-slate-400">Team Target vs Actual</span>
+            <span className="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Top 10 Events</span>
           </div>
 
-          <div className="h-72 w-full">
+          <div className="h-64 w-full">
             {teamsComparisonData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={teamsComparisonData} margin={{ top: 10, right: 10, left: -15, bottom: 25 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <BarChart data={teamsComparisonData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                   <XAxis 
                     dataKey="name" 
-                    angle={-25} 
+                    angle={-20} 
                     textAnchor="end" 
                     interval={0} 
                     tick={{ fontSize: 10, fill: '#64748b' }} 
                   />
-                  <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#0f2648', borderColor: '#1e3a8a', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
-                    itemStyle={{ color: '#e2e8f0' }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                  <Bar dataKey="Expected Teams" fill="#93c5fd" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Registered Teams" fill="#0f2d59" radius={[4, 4, 0, 0]} />
+                  <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                  <Bar dataKey="Expected Teams" fill="#93c5fd" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="Registered Teams" fill="#0b2545" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-xs">
-                No team comparison data available
-              </div>
+              <div className="h-full flex items-center justify-center text-slate-400 text-xs">No data available</div>
             )}
           </div>
         </div>
 
-        {/* Chart 2: Expected Students vs Participating Students */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-subtle">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-emerald-600" />
-              <h3 className="text-sm font-bold text-navy-950">
+        {/* 2. Expected Students vs Participating Students */}
+        <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-subtle flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
                 Expected Students vs Participating Students
               </h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Target student quota versus actual attendee turnout</p>
             </div>
-            <span className="text-[11px] text-slate-400">Student Target vs Turnout</span>
+            <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">
+              Student Turnout
+            </span>
           </div>
 
-          <div className="h-72 w-full">
+          <div className="h-64 w-full">
             {studentsComparisonData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={studentsComparisonData} margin={{ top: 10, right: 10, left: -15, bottom: 25 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <BarChart data={studentsComparisonData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                   <XAxis 
                     dataKey="name" 
-                    angle={-25} 
+                    angle={-20} 
                     textAnchor="end" 
                     interval={0} 
                     tick={{ fontSize: 10, fill: '#64748b' }} 
                   />
-                  <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#0f2648', borderColor: '#1e3a8a', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
-                    itemStyle={{ color: '#e2e8f0' }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                  <Bar dataKey="Expected Students" fill="#a7f3d0" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Participating Students" fill="#059669" radius={[4, 4, 0, 0]} />
+                  <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                  <Bar dataKey="Expected Students" fill="#a7f3d0" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="Participating Students" fill="#059669" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-xs">
-                No student comparison data available
-              </div>
+              <div className="h-full flex items-center justify-center text-slate-400 text-xs">No data available</div>
             )}
           </div>
         </div>
 
       </div>
 
-      {/* ROW 2: Prize Money & Award Distribution */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* ROW 2: Horizontal Rankings & Ranked Prize Money */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         
-        {/* Chart 5: Prize Money by Hackathon */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-subtle">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-amber-600" />
-              <h3 className="text-sm font-bold text-navy-950">
-                Prize Money Won by Hackathon Event (₹)
+        {/* 4. Top 10 Hackathons by Student Participation (Horizontal Bar) */}
+        <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-subtle flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                Top 10 Hackathons by Student Participation
               </h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Highest engagement events ranked by total attendees</p>
             </div>
-            <span className="text-[11px] text-amber-700 font-semibold">Total ₹96,000+</span>
+            <TrendingUp className="w-4 h-4 text-blue-600" />
           </div>
 
           <div className="h-72 w-full">
-            {prizeByHackathonData.length > 0 ? (
+            {top10Hackathons.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={prizeByHackathonData} margin={{ top: 10, right: 10, left: 10, bottom: 25 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <BarChart 
+                  layout="vertical" 
+                  data={top10Hackathons} 
+                  margin={{ top: 5, right: 20, left: 30, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 10, fill: '#64748b' }} />
+                  <YAxis 
+                    type="category" 
+                    dataKey="name" 
+                    tick={{ fontSize: 9.5, fill: '#334155', fontWeight: 500 }} 
+                    width={110} 
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="students" name="Participating Students" fill="#1d4ed8" radius={[0, 3, 3, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-400 text-xs">No data available</div>
+            )}
+          </div>
+        </div>
+
+        {/* 5. Prize Money by Hackathon (Ranked) */}
+        <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-subtle flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                Prize Money by Hackathon (₹)
+              </h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Honoured cash prizes awarded to winning teams</p>
+            </div>
+            <Trophy className="w-4 h-4 text-amber-500" />
+          </div>
+
+          <div className="h-72 w-full">
+            {rankedPrizeData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={rankedPrizeData} margin={{ top: 10, right: 10, left: 5, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                   <XAxis 
                     dataKey="name" 
                     angle={-20} 
@@ -263,109 +325,34 @@ export const ChartsSection: React.FC<ChartsSectionProps> = ({
                     tick={{ fontSize: 10, fill: '#64748b' }} 
                   />
                   <YAxis 
-                    tick={{ fontSize: 11, fill: '#64748b' }}
+                    tick={{ fontSize: 10, fill: '#64748b' }}
                     tickFormatter={(v) => `₹${v/1000}k`}
                   />
-                  <Tooltip 
-                    formatter={formatInrTooltip}
-                    contentStyle={{ backgroundColor: '#0f2648', borderColor: '#1e3a8a', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
-                  />
-                  <Bar dataKey="prize" fill="#d97706" radius={[4, 4, 0, 0]} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="prize" name="Prize Money" fill="#d97706" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-xs">
-                No prize money awards in the selected filter
-              </div>
+              <div className="h-full flex items-center justify-center text-slate-400 text-xs">No prize data available</div>
             )}
-          </div>
-        </div>
-
-        {/* Chart 6: First Prize vs Second Prize Doughnut */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-subtle flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-amber-500" />
-              <h3 className="text-sm font-bold text-navy-950">
-                First vs Second Awards
-              </h3>
-            </div>
-            <span className="text-[11px] text-slate-400">Award Breakdown</span>
-          </div>
-
-          <div className="h-64 w-full flex items-center justify-center">
-            {awardDistributionData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={awardDistributionData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={85}
-                    paddingAngle={4}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
-                    labelLine={false}
-                  >
-                    {awardDistributionData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={AWARD_COLORS[entry.rawAward] || COLORS[index % COLORS.length]} 
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#0f2648', borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
-                  <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="text-slate-400 text-xs">No award data found</div>
-            )}
-          </div>
-          
-          <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-[11px] text-slate-600 flex justify-around text-center">
-            <div>
-              <span className="block font-bold text-amber-700">
-                {teamAwards.filter(t => t.awardPosition === 'First').length}
-              </span>
-              <span>1st Prizes</span>
-            </div>
-            <div className="border-r border-slate-200"></div>
-            <div>
-              <span className="block font-bold text-slate-700">
-                {teamAwards.filter(t => t.awardPosition === 'Second').length}
-              </span>
-              <span>2nd Prizes</span>
-            </div>
-            <div className="border-r border-slate-200"></div>
-            <div>
-              <span className="block font-bold text-blue-700">
-                {teamAwards.length}
-              </span>
-              <span>Total Wins</span>
-            </div>
           </div>
         </div>
 
       </div>
 
-      {/* ROW 3: Outcome Distribution, Top Hackathons, Department Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* ROW 3: Category Doughnuts & Department Distribution */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         
-        {/* Chart 3: Hackathon Outcome Distribution */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-subtle">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <PieIcon className="w-4 h-4 text-blue-700" />
-              <h3 className="text-sm font-bold text-navy-950">
-                Hackathon Outcome Distribution
-              </h3>
-            </div>
-            <span className="text-[11px] text-slate-400">Event Status</span>
+        {/* 3. Participation Status Distribution */}
+        <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-subtle flex flex-col justify-between">
+          <div className="mb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              Participation Status
+            </h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">Overall pipeline breakdown</p>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-52 w-full flex items-center justify-center">
             {outcomeData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -374,98 +361,82 @@ export const ChartsSection: React.FC<ChartsSectionProps> = ({
                     cx="50%"
                     cy="50%"
                     innerRadius={50}
-                    outerRadius={80}
+                    outerRadius={75}
                     paddingAngle={3}
                     dataKey="value"
                   >
                     {outcomeData.map((_, index) => (
-                      <Cell key={`cell-outcome-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={PALETTE[index % PALETTE.length]} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#0f2648', borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
-                  <Legend wrapperStyle={{ fontSize: '11px' }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend wrapperStyle={{ fontSize: '10.5px' }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-xs">
-                No outcome distribution available
-              </div>
+              <div className="text-slate-400 text-xs">No status data</div>
             )}
           </div>
         </div>
 
-        {/* Chart 4: Top Hackathons by Student Participation */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-subtle">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-pec-blue" />
-              <h3 className="text-sm font-bold text-navy-950">
-                Top Events by Student Turnout
-              </h3>
-            </div>
-            <span className="text-[11px] text-slate-400">Highest Involvements</span>
+        {/* 6. First Prize vs Second Prize */}
+        <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-subtle flex flex-col justify-between">
+          <div className="mb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              Award Position Distribution
+            </h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">Podium finishes breakdown</p>
           </div>
 
-          <div className="h-64 w-full">
-            {topHackathonsData.length > 0 ? (
+          <div className="h-52 w-full flex items-center justify-center">
+            {awardDistributionData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart 
-                  layout="vertical" 
-                  data={topHackathonsData} 
-                  margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: '#64748b' }} />
-                  <YAxis 
-                    type="category" 
-                    dataKey="name" 
-                    tick={{ fontSize: 9, fill: '#64748b' }} 
-                    width={110} 
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#0f2648', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
-                  />
-                  <Bar dataKey="students" name="Participating Students" fill="#1d5fa7" radius={[0, 4, 4, 0]} />
-                </BarChart>
+                <PieChart>
+                  <Pie
+                    data={awardDistributionData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={75}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {awardDistributionData.map((entry, index) => (
+                      <Cell key={`award-cell-${index}`} fill={AWARD_PALETTE[entry.rawAward] || PALETTE[index % PALETTE.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend wrapperStyle={{ fontSize: '10.5px' }} />
+                </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-xs">
-                No top hackathon records
-              </div>
+              <div className="text-slate-400 text-xs">No award data</div>
             )}
           </div>
         </div>
 
-        {/* Chart 8: Department-wise Winning Student Participation */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-subtle">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-indigo-600" />
-              <h3 className="text-sm font-bold text-navy-950">
-                Department-wise Winning Achievers
-              </h3>
-            </div>
-            <span className="text-[11px] text-slate-400">Award Honourees</span>
+        {/* 7. Department-wise Student Participation */}
+        <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-subtle flex flex-col justify-between">
+          <div className="mb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              Department Achievers
+            </h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">Student winners by academic branch</p>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-52 w-full">
             {deptData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={deptData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis 
-                    dataKey="dept" 
-                    tick={{ fontSize: 10, fill: '#64748b' }} 
-                  />
-                  <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
-                  <Tooltip contentStyle={{ backgroundColor: '#0f2648', borderRadius: '8px', color: '#fff', fontSize: '12px' }} />
-                  <Bar dataKey="winners" name="Winning Students" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                <BarChart data={deptData} margin={{ top: 10, right: 10, left: -25, bottom: 15 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis dataKey="dept" tick={{ fontSize: 9.5, fill: '#64748b' }} />
+                  <YAxis tick={{ fontSize: 9.5, fill: '#64748b' }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="count" name="Achievers" fill="#4f46e5" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-xs">
-                No department breakdown available
-              </div>
+              <div className="h-full flex items-center justify-center text-slate-400 text-xs">No department data</div>
             )}
           </div>
         </div>
