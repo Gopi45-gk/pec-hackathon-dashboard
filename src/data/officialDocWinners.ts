@@ -1,6 +1,6 @@
-// Official Hackathon Winners Reference Dataset
-// Extracted and validated directly from:
-// /home/gopikrishna/Documents/hackathons update/hackathon 2026.docx
+// Official Hackathon Winners Dataset
+// Extracted exclusively from /home/gopikrishna/Documents/hackathons update/hackathon 2026.docx
+// Prathyusha Engineering College (PEC) Institutional Records
 
 export interface OfficialDocMember {
   name: string;
@@ -10,10 +10,11 @@ export interface OfficialDocMember {
 }
 
 export interface OfficialDocTeamAward {
+  id: string; // Stable unique award identifier
   sNo: string;
   hackathonName: string;
   eventDate: string;
-  awardPosition: 'First' | 'Second' | 'Third' | 'Other';
+  awardPosition: 'First Prize' | 'Second Prize';
   prizeMoney: number;
   prizeMoneyFormatted: string;
   members: OfficialDocMember[];
@@ -21,10 +22,11 @@ export interface OfficialDocTeamAward {
 
 export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
   {
+    id: 'award-1-sih-track-decode-2026',
     sNo: '1',
     hackathonName: 'BHARAT SHAKTHI TRACK DECODE SIH 2026',
     eventDate: '01 AUG 2026',
-    awardPosition: 'First',
+    awardPosition: 'First Prize',
     prizeMoney: 30000,
     prizeMoneyFormatted: '₹30,000/-',
     members: [
@@ -36,10 +38,11 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     ]
   },
   {
+    id: 'award-2-technova-2026',
     sNo: '2',
     hackathonName: 'TECHNOVA 2026',
     eventDate: '13 SEP 2026',
-    awardPosition: 'First',
+    awardPosition: 'First Prize',
     prizeMoney: 25000,
     prizeMoneyFormatted: '₹25,000/-',
     members: [
@@ -47,14 +50,15 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
       { name: 'VISHAL', deptAndYear: 'CSBS/III', department: 'CSBS', academicYear: 'III' },
       { name: 'TANUSREE', deptAndYear: 'CSBS/III', department: 'CSBS', academicYear: 'III' },
       { name: 'PAVITHRA', deptAndYear: 'AIDS/IV', department: 'AIDS', academicYear: 'IV' },
-      { name: 'DHANASREE', deptAndYear: 'BIOTECH/IV', department: 'BIOTECH', academicYear: 'IV' },
+      { name: 'DHANASREE', deptAndYear: '', department: '', academicYear: '' },
     ]
   },
   {
+    id: 'award-3-sustainverse-2026',
     sNo: '3',
     hackathonName: 'SUSTAINVERSE 2026',
     eventDate: '15-16 SEP 2026',
-    awardPosition: 'Second',
+    awardPosition: 'Second Prize',
     prizeMoney: 5000,
     prizeMoneyFormatted: '₹5,000/-',
     members: [
@@ -65,10 +69,11 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     ]
   },
   {
+    id: 'award-4-vynorae-2026',
     sNo: '4',
     hackathonName: 'VYNORAE 2026',
     eventDate: '21-22 AUG 2026',
-    awardPosition: 'First',
+    awardPosition: 'First Prize',
     prizeMoney: 20000,
     prizeMoneyFormatted: '₹20,000/-',
     members: [
@@ -78,10 +83,11 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     ]
   },
   {
+    id: 'award-5-tech-thiruvizha-2026',
     sNo: '5',
     hackathonName: 'TECH THIRUVIZHA 2026',
     eventDate: '25 AUG 2026',
-    awardPosition: 'Second',
+    awardPosition: 'Second Prize',
     prizeMoney: 5000,
     prizeMoneyFormatted: '₹5,000/-',
     members: [
@@ -91,10 +97,11 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     ]
   },
   {
+    id: 'award-6-hack-day-genesis-first-2026',
     sNo: '6',
-    hackathonName: 'HACK DAY GENESIS 2026 (Track A)',
+    hackathonName: 'HACK DAY GENESIS 2026',
     eventDate: '30 SEP 2026',
-    awardPosition: 'First',
+    awardPosition: 'First Prize',
     prizeMoney: 2000,
     prizeMoneyFormatted: '₹2,000/-',
     members: [
@@ -104,31 +111,33 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     ]
   },
   {
+    id: 'award-7-hack-day-genesis-second-2026',
     sNo: '7',
-    hackathonName: 'HACK DAY GENESIS 2026 (Track B)',
+    hackathonName: 'HACK DAY GENESIS 2026',
     eventDate: '30 SEP 2026',
-    awardPosition: 'Second',
+    awardPosition: 'Second Prize',
     prizeMoney: 1000,
     prizeMoneyFormatted: '₹1,000/-',
     members: [
       { name: 'KAVIYA', deptAndYear: 'CSBS/III', department: 'CSBS', academicYear: 'III' },
       { name: 'SHANTHOSH', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
-      { name: 'SAKTHI PRIYA', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
-      { name: 'YAZHINI', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
+      { name: 'Sakthi Priya', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
+      { name: 'Yazhini', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
     ]
   },
   {
+    id: 'award-8-future-forge-2026',
     sNo: '8',
     hackathonName: 'FUTURE FORGE 2K26',
     eventDate: '05-06 OCT 2026',
-    awardPosition: 'Second',
+    awardPosition: 'Second Prize',
     prizeMoney: 8000,
     prizeMoneyFormatted: '₹8,000/-',
     members: [
       { name: 'KAVIYA', deptAndYear: 'CSBS/III', department: 'CSBS', academicYear: 'III' },
       { name: 'SHANTHOSH', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
-      { name: 'SAKTHI PRIYA', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
-      { name: 'YAZHINI', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
+      { name: 'Sakthi Priya', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
+      { name: 'Yazhini', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
     ]
   }
 ];
