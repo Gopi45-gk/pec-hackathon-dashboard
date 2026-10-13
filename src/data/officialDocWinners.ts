@@ -2,6 +2,8 @@
 // Extracted exclusively from /home/gopikrishna/Documents/hackathons update/hackathon 2026.docx
 // Prathyusha Engineering College (PEC) Institutional Records
 
+import { TeamAwardRecord, StudentWinnerRecord } from '../types';
+
 export interface OfficialDocMember {
   name: string;
   deptAndYear: string;
@@ -151,5 +153,43 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
   }
 ];
 
-export const TOTAL_OFFICIAL_DOC_PRIZE = OFFICIAL_DOC_WINNERS.reduce((sum, t) => sum + t.prizeMoney, 0); // 96,000
+// Authoritative aggregate metrics derived from hackathon 2026.docx
+export const TOTAL_OFFICIAL_DOC_PRIZE = OFFICIAL_DOC_WINNERS.reduce((sum, t) => sum + t.prizeMoney, 0); // ₹96,000
+export const TOTAL_OFFICIAL_DOC_AWARDS = OFFICIAL_DOC_WINNERS.length; // 8 Award Records
 export const TOTAL_OFFICIAL_DOC_TEAMS = OFFICIAL_DOC_WINNERS.length; // 8
+export const TOTAL_OFFICIAL_FIRST_PRIZES = OFFICIAL_DOC_WINNERS.filter(w => w.awardPosition === 'First Prize').length; // 4
+export const TOTAL_OFFICIAL_SECOND_PRIZES = OFFICIAL_DOC_WINNERS.filter(w => w.awardPosition === 'Second Prize').length; // 4
+export const TOTAL_OFFICIAL_UNIQUE_STUDENTS = new Set(
+  OFFICIAL_DOC_WINNERS.flatMap(w => w.members.map(m => m.name.toLowerCase().trim()))
+).size; // 20
+
+// Mapped TeamAwardRecord dataset for cross-component consumption
+export const OFFICIAL_TEAM_AWARD_RECORDS: TeamAwardRecord[] = OFFICIAL_DOC_WINNERS.map(w => ({
+  teamId: w.id,
+  sNo: w.sNo,
+  hackathonName: w.hackathonName,
+  eventDate: w.eventDate,
+  awardPosition: w.awardPosition === 'First Prize' ? 'First' : 'Second',
+  rawAward: w.awardPosition,
+  prizeMoney: w.prizeMoney,
+  members: w.members
+}));
+
+// Mapped StudentWinnerRecord dataset (20 total student entries across awards)
+export const OFFICIAL_STUDENT_WINNER_RECORDS: StudentWinnerRecord[] = OFFICIAL_DOC_WINNERS.flatMap(w => 
+  w.members.map((m, idx) => ({
+    id: `${w.id}-student-${idx}`,
+    sNo: w.sNo,
+    studentName: m.name,
+    deptAndYear: m.deptAndYear,
+    department: m.department,
+    academicYear: m.academicYear,
+    hackathonName: w.hackathonName,
+    eventDate: w.eventDate,
+    awardPosition: w.awardPosition === 'First Prize' ? 'First' : 'Second',
+    rawAward: w.awardPosition,
+    prizeMoney: w.prizeMoney,
+    teamId: w.id,
+    isTotalRow: false
+  }))
+);

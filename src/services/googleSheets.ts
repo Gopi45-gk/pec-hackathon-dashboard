@@ -8,8 +8,13 @@ import {
   DataAuditReport,
   DashboardMetrics 
 } from '../types';
+import { 
+  OFFICIAL_TEAM_AWARD_RECORDS, 
+  OFFICIAL_STUDENT_WINNER_RECORDS 
+} from '../data/officialDocWinners';
 // All mock data has been removed.
-// The dashboard operates strictly with live data fetched directly from the connected Google Sheet.
+// The dashboard operates strictly with live data fetched directly from the connected Google Sheet for participation,
+// and the authoritative hackathon 2026.docx Word document as the exclusive source of truth for all winning teams.
 
 // Known GIDs for published workbook: "Domain Wise Hackathon Details"
 export const PUBLISHED_SHEET_GIDS: Record<string, string> = {
@@ -863,21 +868,10 @@ export async function syncGoogleSheetData(config: {
 
   const { records: participation, audit: pAudit } = parseParticipationRecords(partRows, declaredTotalRow);
   
-  let studentWinners: StudentWinnerRecord[] = [];
-  let teamAwards: TeamAwardRecord[] = [];
-  let wAudit: Partial<DataAuditReport> = {};
-
-  if (winRows.length > 0) {
-    const parsedWin = parseWinnersRecords(winRows);
-    studentWinners = parsedWin.studentRecords;
-    teamAwards = parsedWin.teamRecords;
-    wAudit = parsedWin.audit;
-  } else if (participation.length > 0) {
-    // Extract real winners directly from the connected Google Sheet participation records
-    const extracted = extractWinnersFromParticipation(participation);
-    studentWinners = extracted.studentRecords;
-    teamAwards = extracted.teamRecords;
-  }
+  // Authoritative Word document (hackathon 2026.docx) is the EXCLUSIVE source of truth for all winning teams and awards
+  const studentWinners: StudentWinnerRecord[] = OFFICIAL_STUDENT_WINNER_RECORDS;
+  const teamAwards: TeamAwardRecord[] = OFFICIAL_TEAM_AWARD_RECORDS;
+  const wAudit: Partial<DataAuditReport> = {};
 
   const metrics = calculateDashboardMetrics(participation, studentWinners, teamAwards);
   const audit = evaluateDataAudit(pAudit, wAudit, metrics);

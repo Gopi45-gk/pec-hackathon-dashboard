@@ -21,6 +21,17 @@ import {
 } from './types';
 import { ChevronDown, ChevronUp, FileText, ShieldCheck } from 'lucide-react';
 
+import { 
+  OFFICIAL_TEAM_AWARD_RECORDS, 
+  OFFICIAL_STUDENT_WINNER_RECORDS,
+  TOTAL_OFFICIAL_DOC_PRIZE,
+  TOTAL_OFFICIAL_DOC_AWARDS,
+  TOTAL_OFFICIAL_DOC_TEAMS,
+  TOTAL_OFFICIAL_FIRST_PRIZES,
+  TOTAL_OFFICIAL_SECOND_PRIZES,
+  TOTAL_OFFICIAL_UNIQUE_STUDENTS
+} from './data/officialDocWinners';
+
 const STORAGE_KEY_CONFIG = 'pec_hackathon_connection_config_v1';
 
 export const App: React.FC = () => {
@@ -57,8 +68,8 @@ export const App: React.FC = () => {
 
   // Data state
   const [participation, setParticipation] = useState<ParticipationRecord[]>([]);
-  const [studentWinners, setStudentWinners] = useState<StudentWinnerRecord[]>([]);
-  const [teamAwards, setTeamAwards] = useState<TeamAwardRecord[]>([]);
+  const [studentWinners, setStudentWinners] = useState<StudentWinnerRecord[]>(OFFICIAL_STUDENT_WINNER_RECORDS);
+  const [teamAwards, setTeamAwards] = useState<TeamAwardRecord[]>(OFFICIAL_TEAM_AWARD_RECORDS);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     totalHackathons: 0,
     totalExpectedTeams: 0,
@@ -70,14 +81,14 @@ export const App: React.FC = () => {
     completedHackathons: 0,
     shortlistedHackathons: 0,
     hackathonsWithAwards: 0,
-    totalAwardRecords: 0,
-    totalFirstPrizes: 0,
-    totalSecondPrizes: 0,
+    totalAwardRecords: TOTAL_OFFICIAL_DOC_AWARDS,
+    totalFirstPrizes: TOTAL_OFFICIAL_FIRST_PRIZES,
+    totalSecondPrizes: TOTAL_OFFICIAL_SECOND_PRIZES,
     totalThirdPrizes: 0,
-    totalPrizeMoney: 0,
-    uniqueWinningStudents: 0,
-    hackathonsWithWinningTeams: 0,
-    uniqueWinningTeams: 0,
+    totalPrizeMoney: TOTAL_OFFICIAL_DOC_PRIZE,
+    uniqueWinningStudents: TOTAL_OFFICIAL_UNIQUE_STUDENTS,
+    hackathonsWithWinningTeams: 7,
+    uniqueWinningTeams: TOTAL_OFFICIAL_DOC_TEAMS,
     departmentsCount: 0,
     departmentList: [],
     yetToParticipateHackathons: 0

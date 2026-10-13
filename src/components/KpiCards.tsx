@@ -3,14 +3,12 @@ import {
   Layers, 
   Users, 
   UserCheck, 
-  GraduationCap,
   Trophy, 
   Clock
 } from 'lucide-react';
 import { DashboardMetrics } from '../types';
-
 import { 
-  TOTAL_OFFICIAL_DOC_TEAMS, 
+  TOTAL_OFFICIAL_DOC_AWARDS, 
   TOTAL_OFFICIAL_DOC_PRIZE 
 } from '../data/officialDocWinners';
 
@@ -53,12 +51,14 @@ function useCountUp(target: number, duration: number = 800): number {
 }
 
 export const KpiCards: React.FC<KpiCardsProps> = ({ metrics }) => {
+  // Live participation metrics
   const animatedHackathons = useCountUp(metrics.totalHackathons);
   const animatedTeams = useCountUp(metrics.totalRegisteredTeams);
   const animatedStudents = useCountUp(metrics.totalParticipatingStudents);
-  const animatedDepts = useCountUp(metrics.departmentsCount);
-  const animatedWinners = useCountUp(TOTAL_OFFICIAL_DOC_TEAMS);
   const animatedUpcoming = useCountUp(metrics.yetToParticipateHackathons);
+
+  // Authoritative Word document winners metrics (hackathon 2026.docx)
+  const animatedAwards = useCountUp(TOTAL_OFFICIAL_DOC_AWARDS);
 
   const formatNumber = (num: number) => Math.round(num).toLocaleString('en-IN');
 
@@ -71,6 +71,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ metrics }) => {
       icon: Layers,
       iconColor: 'text-slate-700',
       iconBg: 'bg-slate-100',
+      sourceBadge: 'Live Sheet',
     },
     {
       id: 'total-teams',
@@ -82,6 +83,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ metrics }) => {
       icon: Users,
       iconColor: 'text-blue-700',
       iconBg: 'bg-blue-50',
+      sourceBadge: 'Live Sheet',
     },
     {
       id: 'total-students',
@@ -93,26 +95,17 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ metrics }) => {
       icon: UserCheck,
       iconColor: 'text-indigo-700',
       iconBg: 'bg-indigo-50',
-    },
-    {
-      id: 'departments',
-      label: 'Departments',
-      value: metrics.departmentsCount > 0 ? formatNumber(animatedDepts) : 'Unavailable',
-      subtitle: metrics.departmentsCount > 0
-        ? (metrics.departmentList.slice(0, 4).join(', ') + (metrics.departmentList.length > 4 ? ` +${metrics.departmentList.length - 4}` : ''))
-        : 'Department data unavailable',
-      icon: GraduationCap,
-      iconColor: 'text-cyan-700',
-      iconBg: 'bg-cyan-50',
+      sourceBadge: 'Live Sheet',
     },
     {
       id: 'winning-teams',
-      label: 'Winning Teams',
-      value: formatNumber(animatedWinners),
+      label: 'Winning Teams / Award Records',
+      value: formatNumber(animatedAwards),
       subtitle: `₹${TOTAL_OFFICIAL_DOC_PRIZE.toLocaleString('en-IN')} cash awarded`,
       icon: Trophy,
       iconColor: 'text-amber-600',
       iconBg: 'bg-amber-50',
+      sourceBadge: 'Official Doc',
     },
     {
       id: 'upcoming-hackathons',
@@ -122,20 +115,21 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ metrics }) => {
       icon: Clock,
       iconColor: 'text-purple-700',
       iconBg: 'bg-purple-50',
+      sourceBadge: 'Live Sheet',
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
       {cards.map((card) => {
         const IconComponent = card.icon;
         return (
           <div
             key={card.id}
-            className="bg-white border border-slate-200/90 rounded-xl p-3 sm:p-4 shadow-subtle hover:shadow-card hover:border-slate-300 transition-all duration-200 flex flex-col justify-between group min-w-0"
+            className="bg-white border border-slate-200/90 rounded-xl p-3 sm:p-4 shadow-subtle hover:shadow-card hover:border-slate-300 transition-all duration-200 flex flex-col justify-between group min-w-0 last:col-span-2 md:last:col-span-1 lg:last:col-span-1"
           >
             <div className="flex items-center justify-between gap-1.5 mb-2">
-              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider truncate">
+              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider truncate" title={card.label}>
                 {card.label}
               </span>
               <div className={`p-1 sm:p-1.5 rounded-lg ${card.iconBg} ${card.iconColor} shrink-0`}>
