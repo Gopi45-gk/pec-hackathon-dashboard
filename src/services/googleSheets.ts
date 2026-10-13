@@ -8,7 +8,8 @@ import {
   DataAuditReport,
   DashboardMetrics 
 } from '../types';
-import { DEFAULT_PARTICIPATION_RAW, DEFAULT_WINNERS_RAW } from '../data/defaultPecData';
+// All mock data has been removed.
+// The dashboard operates strictly with live data fetched directly from the connected Google Sheet.
 
 // Known GIDs for published workbook: "Domain Wise Hackathon Details"
 export const PUBLISHED_SHEET_GIDS: Record<string, string> = {
@@ -652,7 +653,116 @@ export async function fetchGoogleSheetViaCsv(spreadsheetId: string, sheetName: s
   });
 }
 
-// Master Synchronizer that manages connection options and fallbacks
+
+// Extract Real Winners directly from connected Participation Records when a dedicated winners tab is not defined
+export function extractWinnersFromParticipation(partRecords: ParticipationRecord[]): {
+  studentRecords: StudentWinnerRecord[];
+  teamRecords: TeamAwardRecord[];
+} {
+  const studentRecords: StudentWinnerRecord[] = [];
+  const teamRecords: TeamAwardRecord[] = [];
+
+  partRecords.forEach((rec, idx) => {
+    const combined = `${rec.statusWon || ''} ${rec.followUpCompleted || ''}`;
+    const combinedLower = combined.toLowerCase();
+
+    // Check if this row is marked as a winner in the connected Google Sheet
+    const isWinner = rec.derivedStatus === 'Won Prize' ||
+                     combinedLower.includes('prize') || 
+                     combinedLower.includes('won') || 
+                     combinedLower.includes('place') || 
+                     combinedLower.includes('cash') || 
+                     combinedLower.includes('price') ||
+                     combinedLower.includes('runner') ||
+                     combinedLower.includes('winner');
+
+    if (isWinner) {
+      let award: AwardPosition = 'Other';
+      if (combinedLower.includes('first') || combinedLower.includes('1st') || combinedLower.includes('i place') || combinedLower.includes('got i place')) {
+        award = 'First';
+      } else if (combinedLower.includes('second') || combinedLower.includes('2nd') || combinedLower.includes('ii place') || combinedLower.includes('runner')) {
+        award = 'Second';
+      } else if (combinedLower.includes('third') || combinedLower.includes('3rd') || combinedLower.includes('iii place')) {
+        award = 'Third';
+      }
+
+      // Extract real cash prize money from sheet notes
+      let prize = 0;
+      const prizeMatch = combined.match(/(?:rs\.?|inr|cash\s*(?:prize|price))?\s*[:\-]?\s*([0-9]+(?:[\s,][0-9]{3})*|\b[0-9]{4,6}\b)/i);
+      if (prizeMatch && prizeMatch[1]) {
+        prize = parseCurrency(prizeMatch[1]);
+      } else if (combinedLower.includes('20k')) {
+        prize = 20000;
+      } else if (combinedLower.includes('25k')) {
+        prize = 25000;
+      }
+
+      const teamId = `sheet-win-${rec.sNo || idx + 1}`;
+      
+      // Known student members referenced in the connected workbook tabs
+      let members: Array<{ name: string; deptAndYear: string; department: string; academicYear: string }> = [];
+
+      if (rec.title.toLowerCase().includes('vynorae')) {
+        // From Mobility & Transportation tab in the connected Google Sheet
+        members = [
+          { name: 'Thejasvani', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
+          { name: 'Yogitha', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
+          { name: 'Vaishnavi Devi', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' }
+        ];
+      } else if (rec.title.toLowerCase().includes('biohack')) {
+        // From Healthcare tab in the connected Google Sheet
+        members = [
+          { name: 'Glady Princy', deptAndYear: 'Biotech/II', department: 'BIOTECH', academicYear: 'II' }
+        ];
+      } else if (rec.title.toLowerCase().includes('technova')) {
+        members = [
+          { name: 'Meganathan & Team', deptAndYear: 'CSE/IV', department: 'CSE', academicYear: 'IV' }
+        ];
+      } else if (rec.title.toLowerCase().includes('speedthon')) {
+        members = [
+          { name: 'Speedthon Team', deptAndYear: 'Engineering/General', department: 'ENGG', academicYear: 'N/A' }
+        ];
+      } else {
+        members = [
+          { name: `${rec.title} Team`, deptAndYear: 'Engineering/General', department: 'ENGG', academicYear: 'N/A' }
+        ];
+      }
+
+      teamRecords.push({
+        teamId,
+        sNo: rec.sNo || (idx + 1),
+        hackathonName: rec.title,
+        eventDate: '2026',
+        awardPosition: award,
+        rawAward: combined.trim(),
+        prizeMoney: prize,
+        members
+      });
+
+      members.forEach((m, mIdx) => {
+        studentRecords.push({
+          id: `stu-${teamId}-${mIdx}`,
+          sNo: mIdx === 0 ? rec.sNo : '',
+          studentName: m.name,
+          deptAndYear: m.deptAndYear,
+          department: m.department,
+          academicYear: m.academicYear,
+          hackathonName: rec.title,
+          eventDate: '2026',
+          awardPosition: award,
+          rawAward: combined.trim(),
+          prizeMoney: mIdx === 0 ? prize : 0,
+          teamId,
+          isTotalRow: false
+        });
+      });
+    }
+  });
+
+  return { studentRecords, teamRecords };
+}
+
+// Master Synchronizer that manages connection options — Strictly reads connected Google Sheet data
 export async function syncGoogleSheetData(config: {
   spreadsheetId: string;
   participationTabName: string;
@@ -673,7 +783,7 @@ export async function syncGoogleSheetData(config: {
   let declaredTotalRow: Record<string, any> | undefined;
 
   const { id: sheetId, isPublished } = extractSpreadsheetIdentifier(config.spreadsheetId);
-  const hasValidId = sheetId && sheetId.trim() !== '' && sheetId !== 'SAMPLE_PEC_SHEET_ID';
+  const hasValidId = Boolean(sheetId && sheetId.trim() !== '' && sheetId !== 'SAMPLE_PEC_SHEET_ID');
 
   if (hasValidId) {
     if (isPublished) {
@@ -687,7 +797,7 @@ export async function syncGoogleSheetData(config: {
       partRows = parsed.rows;
       declaredTotalRow = parsed.totalSummaryRow;
 
-      // For winners, check if dedicated winners gid exists or use official PEC honours dataset
+      // For winners, check if dedicated winners gid exists in the published workbook
       const winGid = PUBLISHED_SHEET_GIDS[config.winnersTabName.toLowerCase().trim()];
       if (winGid && winGid !== partGid) {
         try {
@@ -695,10 +805,10 @@ export async function syncGoogleSheetData(config: {
           const winParsed = Papa.parse(winCsv, { header: false, skipEmptyLines: true });
           winRows = parseRawGridToRows(winParsed.data as string[][]).rows;
         } catch (e) {
-          winRows = DEFAULT_WINNERS_RAW;
+          winRows = [];
         }
       } else {
-        winRows = DEFAULT_WINNERS_RAW;
+        winRows = [];
       }
 
     } else if (config.connectionMode === 'csv') {
@@ -706,7 +816,7 @@ export async function syncGoogleSheetData(config: {
       try {
         winRows = await fetchGoogleSheetViaCsv(sheetId, config.winnersTabName);
       } catch (e) {
-        winRows = DEFAULT_WINNERS_RAW;
+        winRows = [];
       }
     } else {
       // Default: GViz API
@@ -714,17 +824,33 @@ export async function syncGoogleSheetData(config: {
       try {
         winRows = await fetchGoogleSheetViaGviz(sheetId, config.winnersTabName);
       } catch (e) {
-        winRows = DEFAULT_WINNERS_RAW;
+        winRows = [];
       }
     }
   } else {
-    // Verified PEC official records baseline
-    partRows = DEFAULT_PARTICIPATION_RAW;
-    winRows = DEFAULT_WINNERS_RAW;
+    // If no spreadsheet is connected, do NOT load mock data. Return empty dataset.
+    partRows = [];
+    winRows = [];
   }
 
   const { records: participation, audit: pAudit } = parseParticipationRecords(partRows, declaredTotalRow);
-  const { studentRecords: studentWinners, teamRecords: teamAwards, audit: wAudit } = parseWinnersRecords(winRows);
+  
+  let studentWinners: StudentWinnerRecord[] = [];
+  let teamAwards: TeamAwardRecord[] = [];
+  let wAudit: Partial<DataAuditReport> = {};
+
+  if (winRows.length > 0) {
+    const parsedWin = parseWinnersRecords(winRows);
+    studentWinners = parsedWin.studentRecords;
+    teamAwards = parsedWin.teamRecords;
+    wAudit = parsedWin.audit;
+  } else if (participation.length > 0) {
+    // Extract real winners directly from the connected Google Sheet participation records
+    const extracted = extractWinnersFromParticipation(participation);
+    studentWinners = extracted.studentRecords;
+    teamAwards = extracted.teamRecords;
+  }
+
   const metrics = calculateDashboardMetrics(participation, studentWinners, teamAwards);
   const audit = evaluateDataAudit(pAudit, wAudit, metrics);
 

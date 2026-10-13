@@ -110,9 +110,9 @@ export const Header: React.FC<HeaderProps> = ({
                   ? 'bg-rose-50 text-rose-700 border-rose-200'
                   : dataSourceType === 'live-sheets'
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : 'bg-amber-50 text-amber-800 border-amber-200'
+                  : 'bg-slate-50 text-slate-600 border-slate-200'
               }`}
-              title={errorMessage || (dataSourceType === 'live-sheets' ? 'Connected to live Google Sheets' : 'Using verified baseline records')}
+              title={errorMessage || (dataSourceType === 'live-sheets' ? 'Connected to live Google Sheets' : 'No Google Sheet connected')}
             >
               {syncStatus === 'refreshing' ? (
                 <>
@@ -135,8 +135,8 @@ export const Header: React.FC<HeaderProps> = ({
                 </>
               ) : (
                 <>
-                  <Database className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Verified Snapshot</span>
+                  <Database className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Disconnected</span>
                 </>
               )}
             </div>

@@ -155,12 +155,6 @@ export const ChartsSection: React.FC<ChartsSectionProps> = ({
     .map(([dept, count]) => ({ dept, count }))
     .sort((a, b) => b.count - a.count);
 
-  // 8. Event Timeline Trends (Monthly Cycle)
-  const timelineData = [
-    { period: 'Aug 2026', events: 14, turnout: 320, prizes: 55000 },
-    { period: 'Sep 2026', events: 35, turnout: 840, prizes: 33000 },
-    { period: 'Oct 2026', events: 14, turnout: 286, prizes: 8000 },
-  ];
 
   return (
     <div className="space-y-6">

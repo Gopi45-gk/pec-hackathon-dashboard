@@ -524,7 +524,7 @@ export const App: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-700 font-mono text-[11px]">
                 <div className="p-2.5 bg-slate-50 rounded border border-slate-200">
                   <span className="font-sans block text-slate-500 font-bold">Configured Sheet ID:</span>
-                  {connectionConfig.spreadsheetId || '(Using default PEC verified records)'}
+                  {connectionConfig.spreadsheetId || '(No spreadsheet configured)'}
                 </div>
                 <div className="p-2.5 bg-slate-50 rounded border border-slate-200">
                   <span className="font-sans block text-slate-500 font-bold">Auto-Refresh Interval:</span>
