@@ -105,23 +105,8 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     ]
   },
   {
-    id: 'award-6-hack-day-genesis-first-2026',
+    id: 'award-6-hack-day-genesis-second-2026',
     sNo: '6',
-    hackathonName: 'HACK DAY GENESIS 2026',
-    chartLabel: 'Hack Day Genesis 2026 — First Prize',
-    eventDate: '30 SEP 2026',
-    awardPosition: 'First Prize',
-    prizeMoney: 2000,
-    prizeMoneyFormatted: '₹2,000/-',
-    members: [
-      { name: 'THEJASVANI S', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
-      { name: 'VAISHNAVI DEVI G', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
-      { name: 'YOGITHA SG', deptAndYear: 'CSE/III', department: 'CSE', academicYear: 'III' },
-    ]
-  },
-  {
-    id: 'award-7-hack-day-genesis-second-2026',
-    sNo: '7',
     hackathonName: 'HACK DAY GENESIS 2026',
     chartLabel: 'Hack Day Genesis 2026 — Second Prize',
     eventDate: '30 SEP 2026',
@@ -136,8 +121,8 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
     ]
   },
   {
-    id: 'award-8-future-forge-2026',
-    sNo: '8',
+    id: 'award-7-future-forge-2026',
+    sNo: '7',
     hackathonName: 'FUTURE FORGE 2K26',
     chartLabel: 'Future Forge 2K26',
     eventDate: '05-06 OCT 2026',
@@ -154,10 +139,10 @@ export const OFFICIAL_DOC_WINNERS: OfficialDocTeamAward[] = [
 ];
 
 // Authoritative aggregate metrics derived from hackathon 2026.docx
-export const TOTAL_OFFICIAL_DOC_PRIZE = OFFICIAL_DOC_WINNERS.reduce((sum, t) => sum + t.prizeMoney, 0); // ₹96,000
-export const TOTAL_OFFICIAL_DOC_AWARDS = OFFICIAL_DOC_WINNERS.length; // 8 Award Records
-export const TOTAL_OFFICIAL_DOC_TEAMS = OFFICIAL_DOC_WINNERS.length; // 8
-export const TOTAL_OFFICIAL_FIRST_PRIZES = OFFICIAL_DOC_WINNERS.filter(w => w.awardPosition === 'First Prize').length; // 4
+export const TOTAL_OFFICIAL_DOC_PRIZE = OFFICIAL_DOC_WINNERS.reduce((sum, t) => sum + t.prizeMoney, 0); // ₹94,000
+export const TOTAL_OFFICIAL_DOC_AWARDS = OFFICIAL_DOC_WINNERS.length; // 7 Award Records
+export const TOTAL_OFFICIAL_DOC_TEAMS = OFFICIAL_DOC_WINNERS.length; // 7
+export const TOTAL_OFFICIAL_FIRST_PRIZES = OFFICIAL_DOC_WINNERS.filter(w => w.awardPosition === 'First Prize').length; // 3
 export const TOTAL_OFFICIAL_SECOND_PRIZES = OFFICIAL_DOC_WINNERS.filter(w => w.awardPosition === 'Second Prize').length; // 4
 export const TOTAL_OFFICIAL_UNIQUE_STUDENTS = new Set(
   OFFICIAL_DOC_WINNERS.flatMap(w => w.members.map(m => m.name.toLowerCase().trim()))

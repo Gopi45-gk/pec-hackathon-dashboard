@@ -72,7 +72,7 @@ VITE_CONNECTION_MODE=gviz
 VITE_AUTO_REFRESH_INTERVAL=30
 ```
 
-*Note: If `VITE_GOOGLE_SHEETS_ID` is left empty, the dashboard defaults to verified PEC 2026 baseline records (₹96,000 prize money, 8 winning teams, 13 hackathon events).*
+*Note: If `VITE_GOOGLE_SHEETS_ID` is left empty, the dashboard defaults to verified PEC 2026 baseline records (₹94,000 prize money, 7 winning teams, 13 hackathon events).*
 
 ### 3. Run Locally
 ```bash
@@ -128,6 +128,6 @@ If your college policies prohibit making the spreadsheet viewable via link:
 | 2 | Auto-refresh every 30-60s & "Refresh Now" | Implemented with background pause on hidden tab |
 | 3 | Preserves view & reports error on sync failure | Implemented with persistent cache & error banner |
 | 4 | Summary rows excluded from calculations | Implemented with discrepancy audit verification |
-| 5 | Team prizes de-duplicated (not multiplied) | Verified: Team award totals ₹96,000 accurately |
+| 5 | Team prizes de-duplicated (not multiplied) | Verified: Team award totals ₹94,000 accurately |
 | 6 | Multi-dimensional global filters | Implemented across KPIs, charts, and tables |
 | 7 | Zero secrets committed | Pure client-side parsing without exposed private keys |
